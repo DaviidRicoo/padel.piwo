@@ -2,8 +2,19 @@
 // /replica-backend swaps in Supabase. State lives in memory: a reload resets it.
 import type { Api } from '../api';
 import { ApiError } from '../errors';
-import { freeSlots, HOST_CONFIRM_AFTER_DAYS, LEVEL_MAX, LEVEL_MIN, ratingDeltas, teamOfPlayer, winnerOf } from '../rules';
-import { teamOf, type AppNotification, type Id, type Match, type NotificationType, type Profile, type RankingEntry } from '../types';
+import { freeSlots, HOST_CONFIRM_AFTER_DAYS, LEVEL_MAX, LEVEL_MIN, livePairOf, ratingDeltas, roundsFor, teamOfPlayer, TOURNAMENT_SIZES, winnerOf } from '../rules';
+import {
+  teamOf,
+  type AppNotification,
+  type Id,
+  type Match,
+  type NotificationType,
+  type Profile,
+  type RankingEntry,
+  type Tournament,
+  type TournamentPair,
+  type TournamentTie,
+} from '../types';
 
 import { buildSeed, type SeedAccount, type SeedState } from './seed';
 
@@ -25,6 +36,7 @@ export function createFakeApi(opts: FakeApiOptions = {}): Api {
   const profiles = new Map<Id, Profile>(seed.profiles.map((p) => [p.id, p]));
   const accounts: SeedAccount[] = [...seed.accounts];
   const matches = new Map<Id, Match>(seed.matches.map((m) => [m.id, m]));
+  const tournaments = new Map<Id, Tournament>(seed.tournaments.map((t) => [t.id, t]));
   const notifications = [...seed.notifications];
   const listeners = new Set<() => void>();
   let userId: Id | null = null;
@@ -50,8 +62,101 @@ export function createFakeApi(opts: FakeApiOptions = {}): Api {
     return m;
   }
 
-  function notify(playerId: Id, type: NotificationType, matchId: Id | null, actorId: Id | null) {
-    notifications.unshift({ id: nextId('n'), playerId, type, matchId, actorId, readAt: null, createdAt: now().toISOString() });
+  function notify(playerId: Id, type: NotificationType, matchId: Id | null, actorId: Id | null, tournamentId: Id | null = null) {
+    notifications.unshift({ id: nextId('n'), playerId, type, matchId, tournamentId, actorId, readAt: null, createdAt: now().toISOString() });
+  }
+
+  function getTournamentOrThrow(id: Id): Tournament {
+    const t = tournaments.get(id);
+    if (!t) throw new ApiError('tournament_not_found');
+    return t;
+  }
+
+  function pairOrThrow(pairId: Id): { t: Tournament; pair: TournamentPair } {
+    for (const t of tournaments.values()) {
+      const pair = t.pairs.find((x) => x.id === pairId);
+      if (pair) return { t, pair };
+    }
+    throw new ApiError('pair_not_found');
+  }
+
+  /** create_tie_match(): the real match for a tie, once both pairs are known */
+  function createTieMatch(t: Tournament, tie: TournamentTie) {
+    const a = t.pairs.find((x) => x.id === tie.pairAId)!;
+    const b = t.pairs.find((x) => x.id === tie.pairBId)!;
+    const soon = now().getTime() + 24 * 60 * 60 * 1000;
+    const startsAt = tie.roundNo === 1 ? Math.max(new Date(t.startsAt).getTime(), soon) : now().getTime() + t.roundDays * 24 * 60 * 60 * 1000;
+    const id = nextId('m');
+    matches.set(id, {
+      id,
+      hostId: t.organizerId,
+      startsAt: new Date(startsAt).toISOString(),
+      durationMinutes: 90,
+      place: t.place,
+      type: 'competitive',
+      levelMin: LEVEL_MIN,
+      levelMax: LEVEL_MAX,
+      notes: t.name,
+      status: 'full',
+      tournamentId: t.id,
+      players: [
+        { playerId: a.player1Id, slot: 1, status: 'joined' },
+        { playerId: a.player2Id, slot: 2, status: 'joined' },
+        { playerId: b.player1Id, slot: 3, status: 'joined' },
+        { playerId: b.player2Id, slot: 4, status: 'joined' },
+      ],
+      result: null,
+      createdAt: now().toISOString(),
+    });
+    tie.matchId = id;
+    [a.player1Id, a.player2Id, b.player1Id, b.player2Id].forEach((pid) => notify(pid, 'tournament_match_ready', id, null, t.id));
+  }
+
+  /** draw_tournament(): random seeds, every tie up front, first-round matches */
+  function draw(t: Tournament) {
+    t.pairs.filter((x) => x.status === 'pending').forEach((x) => (x.status = 'withdrawn'));
+    const confirmed = t.pairs.filter((x) => x.status === 'confirmed');
+    const shuffled = [...confirmed].sort(() => Math.random() - 0.5);
+    shuffled.forEach((x, i) => (x.seed = i + 1));
+    const rounds = roundsFor(t.maxPairs);
+    t.ties = [];
+    for (let r = 1; r <= rounds; r++) {
+      for (let pos = 1; pos <= t.maxPairs >> r; pos++) {
+        const first = r === 1;
+        t.ties.push({
+          id: nextId('tt'),
+          roundNo: r,
+          pos,
+          pairAId: first ? shuffled[2 * pos - 2].id : null,
+          pairBId: first ? shuffled[2 * pos - 1].id : null,
+          matchId: null,
+          winnerPairId: null,
+        });
+      }
+    }
+    t.status = 'in_progress';
+    confirmed.forEach((x) => [x.player1Id, x.player2Id].forEach((pid) => notify(pid, 'tournament_started', null, null, t.id)));
+    t.ties.filter((x) => x.roundNo === 1).forEach((x) => createTieMatch(t, x));
+  }
+
+  /** advance_tournament(): the winner moves on, or becomes champion after the final */
+  function advance(m: Match) {
+    const t = tournaments.get(m.tournamentId!);
+    const tie = t?.ties.find((x) => x.matchId === m.id);
+    if (!t || !tie || !m.result) return;
+    const winner = m.result.winnerTeam === 'A' ? tie.pairAId : tie.pairBId;
+    tie.winnerPairId = winner;
+    if (tie.roundNo === roundsFor(t.maxPairs)) {
+      t.status = 'finished';
+      t.championPairId = winner;
+      const w = t.pairs.find((x) => x.id === winner)!;
+      [w.player1Id, w.player2Id].forEach((pid) => notify(pid, 'tournament_finished', null, null, t.id));
+      return;
+    }
+    const next = t.ties.find((x) => x.roundNo === tie.roundNo + 1 && x.pos === Math.ceil(tie.pos / 2))!;
+    if (tie.pos % 2 === 1) next.pairAId = winner;
+    else next.pairBId = winner;
+    if (next.pairAId && next.pairBId) createTieMatch(t, next);
   }
 
   function started(m: Match) {
@@ -79,6 +184,7 @@ export function createFakeApi(opts: FakeApiOptions = {}): Api {
     m.result!.confirmedBy = confirmer;
     m.status = 'played';
     if (m.type === 'competitive') applyRatings(m);
+    if (m.tournamentId) advance(m);
   }
 
   function replaySeedRatings() {
@@ -363,6 +469,133 @@ export function createFakeApi(opts: FakeApiOptions = {}): Api {
       if (age < HOST_CONFIRM_AFTER_DAYS * 24 * 60 * 60 * 1000) throw new ApiError('too_early');
       finalize(m, uid);
       m.players.filter((x) => x.status === 'joined' && x.playerId !== uid).forEach((x) => notify(x.playerId, 'result_confirmed', m.id, uid));
+      emit();
+    },
+
+    async listPlayerRecentMatches(playerId) {
+      await wait();
+      me();
+      return [...matches.values()]
+        .filter((m) => m.status !== 'cancelled' && started(m) && m.players.some((x) => x.playerId === playerId && x.status === 'joined'))
+        .sort((a, b) => b.startsAt.localeCompare(a.startsAt))
+        .map(clone);
+    },
+
+    async listTournaments() {
+      await wait();
+      me();
+      return [...tournaments.values()].sort((a, b) => a.startsAt.localeCompare(b.startsAt)).map(clone);
+    },
+
+    async getTournament(id) {
+      await wait();
+      me();
+      return clone(getTournamentOrThrow(id));
+    },
+
+    async createTournament(input) {
+      await wait();
+      const organizer = me();
+      const name = input.name.trim();
+      const place = input.place.trim();
+      if (name.length < 2 || name.length > 80) throw new ApiError('invalid_name');
+      if (place.length < 2 || place.length > 120) throw new ApiError('invalid_place');
+      if (!TOURNAMENT_SIZES.includes(input.players)) throw new ApiError('invalid_size');
+      if (!(new Date(input.startsAt).getTime() > now().getTime())) throw new ApiError('starts_in_past');
+      const id = nextId('t');
+      tournaments.set(id, {
+        id,
+        organizerId: organizer,
+        name,
+        description: input.description?.trim() || null,
+        place,
+        startsAt: new Date(input.startsAt).toISOString(),
+        maxPairs: (input.players / 2) as Tournament['maxPairs'],
+        roundDays: Math.min(30, Math.max(1, Math.round(input.roundDays))),
+        status: 'registration',
+        championPairId: null,
+        pairs: [],
+        ties: [],
+        createdAt: now().toISOString(),
+      });
+      emit();
+      return id;
+    },
+
+    async registerPair(tournamentId, partnerId) {
+      await wait();
+      const uid = me();
+      const t = getTournamentOrThrow(tournamentId);
+      if (t.status !== 'registration') throw new ApiError('registration_closed');
+      if (partnerId === uid) throw new ApiError('partner_is_self');
+      const partner = profiles.get(partnerId);
+      if (!partner || partner.isDeleted) throw new ApiError('partner_not_found');
+      if (livePairOf(t, uid) || livePairOf(t, partnerId)) throw new ApiError('already_in_tournament');
+      const id = nextId('tp');
+      t.pairs.push({ id, player1Id: uid, player2Id: partnerId, status: 'pending', seed: null, createdAt: now().toISOString() });
+      notify(partnerId, 'tournament_pair_invite', null, uid, t.id);
+      emit();
+      return id;
+    },
+
+    async respondPairInvite(pairId, accept) {
+      await wait();
+      const uid = me();
+      const { t, pair } = pairOrThrow(pairId);
+      if (pair.player2Id !== uid) throw new ApiError('not_invited');
+      if (pair.status !== 'pending') throw new ApiError('nothing_to_answer');
+      if (t.status !== 'registration') throw new ApiError('registration_closed');
+      if (!accept) {
+        pair.status = 'withdrawn';
+        notify(pair.player1Id, 'tournament_pair_declined', null, uid, t.id);
+        emit();
+        return;
+      }
+      const confirmed = t.pairs.filter((x) => x.status === 'confirmed').length;
+      if (confirmed >= t.maxPairs) throw new ApiError('tournament_full');
+      pair.status = 'confirmed';
+      notify(pair.player1Id, 'tournament_pair_accepted', null, uid, t.id);
+      // the draw runs inside the call that accepts the last pair
+      if (confirmed + 1 === t.maxPairs) draw(t);
+      emit();
+    },
+
+    async withdrawPair(pairId) {
+      await wait();
+      const uid = me();
+      const { t, pair } = pairOrThrow(pairId);
+      if (pair.player1Id !== uid && pair.player2Id !== uid) throw new ApiError('not_allowed');
+      if (pair.status === 'withdrawn') throw new ApiError('nothing_to_withdraw');
+      if (t.status !== 'registration') throw new ApiError('registration_closed');
+      pair.status = 'withdrawn';
+      notify(uid === pair.player1Id ? pair.player2Id : pair.player1Id, 'tournament_pair_withdrawn', null, uid, t.id);
+      emit();
+    },
+
+    async cancelTournament(id) {
+      await wait();
+      const uid = me();
+      const t = getTournamentOrThrow(id);
+      if (t.organizerId !== uid) throw new ApiError('not_organizer');
+      if (t.status !== 'registration' && t.status !== 'in_progress') throw new ApiError('tournament_closed');
+      t.status = 'cancelled';
+      for (const m of matches.values()) if (m.tournamentId === t.id && (m.status === 'open' || m.status === 'full')) m.status = 'cancelled';
+      t.pairs
+        .filter((x) => x.status !== 'withdrawn')
+        .forEach((x) => [x.player1Id, x.player2Id].forEach((pid) => notify(pid, 'tournament_cancelled', null, uid, t.id)));
+      emit();
+    },
+
+    async organizerSetResult(matchId, sets) {
+      await wait();
+      const uid = me();
+      const m = getMatchOrThrow(matchId);
+      if (!m.tournamentId) throw new ApiError('not_tournament_match');
+      if (m.hostId !== uid) throw new ApiError('not_organizer');
+      if (m.status !== 'full') throw new ApiError('result_not_allowed');
+      const winnerTeam = winnerOf(sets);
+      m.result = { submittedBy: uid, winnerTeam, status: 'pending', confirmedBy: null, createdAt: now().toISOString(), sets: sets.map((x) => ({ ...x })) };
+      finalize(m, uid);
       emit();
     },
 

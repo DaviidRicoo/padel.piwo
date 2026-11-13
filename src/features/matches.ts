@@ -50,8 +50,12 @@ export function statusLabelFor(m: Match, me: Id | null, i18n: I18n): string {
   }
 }
 
-/** Everything MatchCard needs, from a match and the people in it. */
-export function toMatchCard(m: Match, people: People, me: Id | null, i18n: I18n): Omit<MatchCardProps, 'onPress'> {
+/**
+ * Everything MatchCard needs, from a match and the people in it. `perspective`
+ * is whose win or loss the badge shows (another player's, on their profile);
+ * it defaults to the viewer.
+ */
+export function toMatchCard(m: Match, people: People, me: Id | null, i18n: I18n, perspective: Id | null = me): Omit<MatchCardProps, 'onPress'> {
   const { t } = i18n;
   const slots: (SlotPlayer | null)[] = [1, 2, 3, 4].map((slot) => {
     const p = m.players.find((x) => x.slot === slot && x.status === 'joined');
@@ -70,7 +74,7 @@ export function toMatchCard(m: Match, people: People, me: Id | null, i18n: I18n)
     status: m.status,
     statusLabel: statusLabelFor(m, me, i18n),
     sets: m.result?.sets,
-    resultBadge: resultBadgeFor(m, me, i18n),
+    resultBadge: resultBadgeFor(m, perspective, i18n),
     freeSlotLabel: t('matchDetail.join'),
   };
 }

@@ -83,6 +83,61 @@ export interface RankingEntry {
   winRate: number;
 }
 
+// ---------------------------------------------------------------- tournaments
+// tournaments, tournament_pairs and tournament_ties in replica/schema.sql
+
+export type TournamentStatus = 'registration' | 'in_progress' | 'finished' | 'cancelled';
+
+export interface TournamentPair {
+  id: Id;
+  /** who registered the pair */
+  player1Id: Id;
+  /** the partner they named; the pair counts once this player accepts */
+  player2Id: Id;
+  status: 'pending' | 'confirmed' | 'withdrawn';
+  seed: number | null;
+  createdAt: string;
+}
+
+export interface TournamentTie {
+  id: Id;
+  /** 1 is the first round; the last round is the final */
+  roundNo: number;
+  pos: number;
+  pairAId: Id | null;
+  pairBId: Id | null;
+  matchId: Id | null;
+  winnerPairId: Id | null;
+}
+
+export interface Tournament {
+  id: Id;
+  organizerId: Id;
+  name: string;
+  description: string | null;
+  place: string;
+  startsAt: string;
+  /** 4, 8 or 16 pairs: 8, 16 or 32 players */
+  maxPairs: 4 | 8 | 16;
+  roundDays: number;
+  status: TournamentStatus;
+  championPairId: Id | null;
+  pairs: TournamentPair[];
+  ties: TournamentTie[];
+  createdAt: string;
+}
+
+export interface NewTournament {
+  name: string;
+  description?: string;
+  place: string;
+  startsAt: string;
+  players: 8 | 16 | 32;
+  roundDays: number;
+}
+
+// ---------------------------------------------------------------- notifications
+
 export type NotificationType =
   | 'player_joined'
   | 'join_requested'
@@ -91,12 +146,23 @@ export type NotificationType =
   | 'result_submitted'
   | 'result_confirmed'
   | 'result_disputed'
-  | 'result_reminder';
+  | 'result_reminder'
+  | 'tournament_pair_invite'
+  | 'tournament_pair_accepted'
+  // the SQL stores a declined invite as tournament_pair_accepted with accepted: false;
+  // the backend maps that payload to this type
+  | 'tournament_pair_declined'
+  | 'tournament_pair_withdrawn'
+  | 'tournament_started'
+  | 'tournament_match_ready'
+  | 'tournament_cancelled'
+  | 'tournament_finished';
 
 export interface AppNotification {
   id: Id;
   type: NotificationType;
   matchId: Id | null;
+  tournamentId: Id | null;
   /** who caused it, when there is someone */
   actorId: Id | null;
   readAt: string | null;

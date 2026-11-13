@@ -1,7 +1,24 @@
 // Pure rules shared by the fake data layer and the screens. Each one mirrors a
 // rule in replica/schema.sql, so the app and the database agree.
 import { ApiError } from './errors';
-import { teamOf, type Id, type Match, type SetScore, type Team } from './types';
+import { teamOf, type Id, type Match, type SetScore, type Team, type Tournament, type TournamentPair } from './types';
+
+export const TOURNAMENT_SIZES = [8, 16, 32] as const;
+
+/** 4 pairs play 2 rounds, 8 pairs 3, 16 pairs 4. */
+export function roundsFor(maxPairs: number): number {
+  return Math.round(Math.log2(maxPairs));
+}
+
+/** The pair a player is in (pending or confirmed), if any. */
+export function livePairOf(t: Tournament, playerId: Id | null): TournamentPair | undefined {
+  if (!playerId) return undefined;
+  return t.pairs.find((p) => p.status !== 'withdrawn' && (p.player1Id === playerId || p.player2Id === playerId));
+}
+
+export function confirmedPairs(t: Tournament): TournamentPair[] {
+  return t.pairs.filter((p) => p.status === 'confirmed');
+}
 
 export const SET_MAX_GAMES = 20;
 export const LEVEL_MIN = 1;
@@ -79,6 +96,8 @@ export function matchActions(m: Match, me: Id | null, now = Date.now()) {
     canConfirm: rival && r?.status === 'pending',
     canDispute: rival && r?.status === 'pending',
     canHostConfirm: isHost && r?.status === 'pending' && pendingFor >= HOST_CONFIRM_AFTER_DAYS * 24 * 60 * 60 * 1000,
+    // organizer_set_result(): in a tournament the host is the organizer, the referee
+    canOrganizerSet: isHost && !!m.tournamentId && m.status === 'full',
     isHost,
     joined,
     requested,

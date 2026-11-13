@@ -1,6 +1,7 @@
-import { View } from 'react-native';
+import { Pressable, View, type ViewStyle } from 'react-native';
 
 import { AppText, Avatar, Badge, LevelChip } from '@/components/ui';
+import { useFocusRing } from '@/components/ui/focus';
 import { useTheme } from '@/theme';
 
 // counts are at most 3 digits; the win rate needs room for "100 %" on one line
@@ -46,24 +47,26 @@ export interface RankingRowProps {
   columns: RankingColumns;
   positionLabel?: string;
   locale?: string;
+  /** opens the player's profile */
+  onPress?: () => void;
 }
 
-export function RankingRow({ position, name, uri, level, played, won, winRate, me, columns, positionLabel = 'Puesto', locale = 'es-ES' }: RankingRowProps) {
+export function RankingRow({ position, name, uri, level, played, won, winRate, me, columns, positionLabel = 'Puesto', locale = 'es-ES', onPress }: RankingRowProps) {
   const t = useTheme();
+  const focus = useFocusRing();
   // a no-break space keeps "100 %" together
-  const rate = `${new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(winRate)} %`;
-  return (
-    <View
-      accessible
-      accessibilityLabel={`${positionLabel} ${position}, ${name}, ${played} ${columns.played}, ${won} ${columns.won}, ${rate}`}
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: t.space[3],
-        paddingHorizontal: t.space[4],
-        paddingVertical: t.space[3],
-        backgroundColor: me ? t.color.surface2 : t.color.surface,
-      }}>
+  const rate = `${new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(winRate)}\u00A0%`;
+  const label = `${positionLabel} ${position}, ${name}, ${played} ${columns.played}, ${won} ${columns.won}, ${rate}`;
+  const row: ViewStyle = {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: t.space[3],
+    paddingHorizontal: t.space[4],
+    paddingVertical: t.space[3],
+    backgroundColor: me ? t.color.surface2 : t.color.surface,
+  };
+  const content = (
+    <>
       <View style={{ width: 32, alignItems: 'center' }}>
         {/* top three get a filled gold badge, never gold text, so contrast holds on any row */}
         {position <= 3 ? (
@@ -85,7 +88,24 @@ export function RankingRow({ position, name, uri, level, played, won, winRate, m
       <Stat value={String(played)} width={COUNT_WIDTH} />
       <Stat value={String(won)} width={COUNT_WIDTH} />
       <Stat value={rate} width={RATE_WIDTH} strong />
-    </View>
+    </>
+  );
+  if (!onPress) {
+    return (
+      <View accessible accessibilityLabel={label} style={row}>
+        {content}
+      </View>
+    );
+  }
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      onPress={onPress}
+      {...focus.handlers}
+      style={({ pressed }) => [row, pressed ? { backgroundColor: t.color.surface2 } : null, focus.ring]}>
+      {content}
+    </Pressable>
   );
 }
 

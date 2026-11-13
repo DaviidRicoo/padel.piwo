@@ -1,4 +1,16 @@
-import type { AppNotification, Id, Locale, Match, NewMatch, Profile, ProfileUpdate, RankingEntry, SetScore } from './types';
+import type {
+  AppNotification,
+  Id,
+  Locale,
+  Match,
+  NewMatch,
+  NewTournament,
+  Profile,
+  ProfileUpdate,
+  RankingEntry,
+  SetScore,
+  Tournament,
+} from './types';
 
 /**
  * The one contract between screens and data. The fake implementation
@@ -40,8 +52,22 @@ export interface Api {
   disputeResult(matchId: Id): Promise<void>;
   hostConfirmResult(matchId: Id): Promise<void>;
 
+  /** another player's matches that have started, newest first (S13) */
+  listPlayerRecentMatches(playerId: Id): Promise<Match[]>;
+
   /** p_since: start of the period, or null for all time */
   ranking(since: Date | null): Promise<RankingEntry[]>;
+
+  // tournaments: mirror create_tournament, register_pair, respond_pair_invite,
+  // withdraw_pair, cancel_tournament and organizer_set_result
+  listTournaments(): Promise<Tournament[]>;
+  getTournament(id: Id): Promise<Tournament>;
+  createTournament(input: NewTournament): Promise<Id>;
+  registerPair(tournamentId: Id, partnerId: Id): Promise<Id>;
+  respondPairInvite(pairId: Id, accept: boolean): Promise<void>;
+  withdrawPair(pairId: Id): Promise<void>;
+  cancelTournament(id: Id): Promise<void>;
+  organizerSetResult(matchId: Id, sets: SetScore[]): Promise<void>;
 
   listNotifications(): Promise<AppNotification[]>;
   markNotificationsRead(): Promise<void>;

@@ -66,7 +66,8 @@ function Segment({ label, selected, disabled, onPress }: { label: string; select
         },
         focus.ring,
       ]}>
-      <AppText variant="label" tone={selected ? 'onAccent' : 'textMuted'} numberOfLines={1}>
+      {/* up to two lines: with four options a label like "Sin indicar" would otherwise be cut */}
+      <AppText variant="label" tone={selected ? 'onAccent' : 'textMuted'} numberOfLines={2} align="center">
         {label}
       </AppText>
     </Pressable>
