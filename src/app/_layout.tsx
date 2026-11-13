@@ -55,7 +55,7 @@ function ThemedNavigation() {
   return (
     <ThemeProvider value={navTheme}>
       <StatusBar style={t.name === 'dark' ? 'light' : 'dark'} />
-      <ToastProvider bottomOffset={t.layout.tabBar}>
+      <ToastProvider>
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.color.bg } }}>
           <Stack.Protected guard={!!userId}>
             <Stack.Screen name="(app)" />

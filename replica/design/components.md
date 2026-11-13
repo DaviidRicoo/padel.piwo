@@ -157,8 +157,9 @@ ConfirmDialog
 ```
 Toast
   tones     info (accent / on-accent), success (success / on-success), error (danger / on-danger)
-  comport.  abajo, por encima de la barra de pestañas, se cierra solo a los 3 s,
-            no tapa botones
+  comport.  arriba, bajo la cabecera, se cierra solo a los 3 s. Deja pasar los toques.
+            Antes iba abajo, pero tapaba el botón principal del pie de pantalla
+            (encontrado en /replica-build, tanda 2).
   a11y      se anuncia con AccessibilityInfo.announceForAccessibility
   usado en  todas (confirmaciones y errores de red)
 ```
