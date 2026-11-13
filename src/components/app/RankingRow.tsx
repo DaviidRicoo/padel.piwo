@@ -3,7 +3,10 @@ import { View } from 'react-native';
 import { AppText, Avatar, Badge, LevelChip } from '@/components/ui';
 import { useTheme } from '@/theme';
 
-const STAT_WIDTH = 48;
+// counts are at most 3 digits; the win rate needs room for "100 %" on one line
+const COUNT_WIDTH = 32;
+const RATE_WIDTH = 56;
+const WIDTHS = [COUNT_WIDTH, COUNT_WIDTH, RATE_WIDTH];
 
 export interface RankingColumns {
   played: string;
@@ -18,10 +21,11 @@ export function RankingHeader({ columns }: { columns: RankingColumns }) {
     <View
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
-      style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: t.space[4], paddingVertical: t.space[2] }}>
+      // same gap and widths as the rows, so the titles sit above their numbers
+      style={{ flexDirection: 'row', alignItems: 'center', gap: t.space[3], paddingHorizontal: t.space[4], paddingVertical: t.space[2] }}>
       <View style={{ flex: 1 }} />
-      {[columns.played, columns.won, columns.winRate].map((c) => (
-        <AppText key={c} variant="caption" tone="textMuted" align="right" style={{ width: STAT_WIDTH }}>
+      {[columns.played, columns.won, columns.winRate].map((c, i) => (
+        <AppText key={c} variant="caption" tone="textMuted" align="right" style={{ width: WIDTHS[i] }}>
           {c}
         </AppText>
       ))}
@@ -46,7 +50,8 @@ export interface RankingRowProps {
 
 export function RankingRow({ position, name, uri, level, played, won, winRate, me, columns, positionLabel = 'Puesto', locale = 'es-ES' }: RankingRowProps) {
   const t = useTheme();
-  const rate = `${new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(winRate)} %`;
+  // a no-break space keeps "100 %" together
+  const rate = `${new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(winRate)} %`;
   return (
     <View
       accessible
@@ -69,23 +74,24 @@ export function RankingRow({ position, name, uri, level, played, won, winRate, m
           </AppText>
         )}
       </View>
-      <Avatar name={name} uri={uri} size={40} me={me} />
+      <Avatar name={name} uri={uri} size={32} me={me} />
       <View style={{ flex: 1, gap: 2 }}>
-        <AppText variant="label" numberOfLines={1}>
+        {/* two lines: full names fit at phone width instead of being cut */}
+        <AppText variant="label" numberOfLines={2}>
           {name}
         </AppText>
         <LevelChip value={level} size="sm" locale={locale} />
       </View>
-      <Stat value={String(played)} />
-      <Stat value={String(won)} />
-      <Stat value={rate} strong />
+      <Stat value={String(played)} width={COUNT_WIDTH} />
+      <Stat value={String(won)} width={COUNT_WIDTH} />
+      <Stat value={rate} width={RATE_WIDTH} strong />
     </View>
   );
 }
 
-function Stat({ value, strong }: { value: string; strong?: boolean }) {
+function Stat({ value, width, strong }: { value: string; width: number; strong?: boolean }) {
   return (
-    <AppText variant={strong ? 'label' : 'bodySm'} numeric align="right" style={{ width: STAT_WIDTH }}>
+    <AppText variant={strong ? 'label' : 'bodySm'} numeric align="right" numberOfLines={1} style={{ width }}>
       {value}
     </AppText>
   );
