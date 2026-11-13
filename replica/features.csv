@@ -1,0 +1,55 @@
+feature,area,priority,original,clone,notes
+Registro con email y contraseña (abierto),onboarding,must,yes,no,Registro abierto sin código de invitación
+Inicio de sesión y cerrar sesión,onboarding,must,yes,no,
+Registro con Google / Apple,onboarding,should,yes,no,Apple obligatorio en iOS si hay login social
+Recuperar contraseña,onboarding,must,yes,no,
+Cuestionario inicial para asignar nivel,onboarding,should,yes,no,Versión propia de 5-8 preguntas
+Crear partido (fecha hora duración lugar tipo plazas),matches,must,yes,no,La duración decide cuándo salta el recordatorio del resultado
+Partido amistoso o competitivo,matches,must,yes,no,Solo el competitivo mueve ranking y nivel
+Rango de nivel permitido en el partido,matches,should,yes,no,
+Lista de partidos abiertos,matches,must,yes,no,
+Unirse a un partido con plaza libre,matches,must,yes,no,
+Solicitar plaza fuera del rango de nivel,matches,could,yes,no,El anfitrión acepta o rechaza
+Salir de un partido,matches,must,yes,no,
+Cancelar partido (anfitrión),matches,must,yes,no,
+Detalle de partido con jugadores y equipos,matches,must,yes,no,
+Invitar a jugadores por enlace,matches,should,yes,no,
+Introducir resultado por sets,results,must,yes,no,
+Confirmar o disputar resultado por el rival,results,must,yes,no,Mejora sobre el original si se hace bien
+Recordatorio push al terminar el partido para confirmar el resultado,results,must,no,no,Petición del usuario; no verificado en el original
+El anfitrión confirma el resultado a los 7 días si el rival no lo ha confirmado,results,should,no,no,Decisión del usuario; no cubre resultados disputados
+Partidos recientes con resultado,results,must,yes,no,
+Historial de partidos en el perfil,results,must,yes,no,
+Ranking general,ranking,must,yes,no,
+Estadísticas en ranking: jugados ganados win rate,ranking,must,yes,no,
+Estadísticas extra: perdidos racha sets,ranking,should,yes,no,
+Filtro de ranking por periodo (temporada / total),ranking,should,yes,no,
+Ranking entre amigos o seguidos,ranking,could,yes,no,
+Ranking por club,ranking,could,yes,skip,Depende de la red de clubes
+Cálculo de nivel tras partido competitivo,ranking,should,yes,no,Algoritmo propio tipo Elo; el de Playtomic es propietario
+Ver perfil propio con stats,profile,must,yes,no,
+Editar perfil (nombre foto mano posición),profile,must,yes,no,
+Ver perfil de otro jugador,profile,must,yes,no,
+Buscar jugadores,social,should,yes,no,
+Seguir jugadores,social,could,yes,no,
+Notificaciones push (invitación resultado plaza),notifications,must,yes,no,Necesarias para los recordatorios de resultado
+Ajustes (idioma notificaciones borrar cuenta),settings,must,yes,no,Borrar cuenta es obligatorio en las tiendas
+Interfaz en español e inglés,settings,must,yes,no,Idiomas confirmados por el usuario
+Evento social tras el partido (cerveza / quedada),matches,could,no,no,Idea propia de la marca Padel & Piwo; no existe en el original
+Crear torneo de 8 16 o 32 jugadores,tournaments,must,no,no,En el original los torneos los crean los clubes; aquí cualquier miembro
+Inscripción por parejas eligiendo al compañero por perfil,tournaments,must,yes,no,Compañero elegido de una lista de búsqueda
+El compañero acepta la invitación,tournaments,must,no,no,Solo las parejas aceptadas cuentan para el cupo
+Sorteo aleatorio automático al llenarse el cupo,tournaments,must,no,no,
+Cuadro de eliminación directa,tournaments,must,yes,no,
+El ganador avanza al confirmarse el resultado,tournaments,must,no,no,Reutiliza el flujo de resultado de los partidos
+El organizador fija el resultado si hay bloqueo,tournaments,should,no,no,
+Retirar pareja antes del sorteo,tournaments,should,no,no,
+Cancelar torneo (organizador),tournaments,should,no,no,
+Notificaciones de torneo (invitación sorteo partido listo campeón),tournaments,should,no,no,
+Si el organizador borra su cuenta el torneo pasa a un jugador inscrito,tournaments,should,no,no,Decisión del usuario; elige a quien se inscribió primero
+Reprogramar partido de torneo,tournaments,could,no,no,
+Reserva de pista en clubes,booking,could,yes,skip,Fuera de alcance: red de clubes y disponibilidad en tiempo real
+Pago de pista y partidos,payments,could,yes,skip,Fuera de alcance
+Playtomic Premium y estadísticas avanzadas,monetization,could,yes,skip,Fuera de alcance de esta versión
+Torneos gestionados por clubes (cobro de inscripción),tournaments,could,yes,skip,Fuera de alcance: dependen de la red de clubes y de pagos
+Red de clubes y jugadores existentes,network,could,yes,skip,Es propiedad del original y no se puede clonar

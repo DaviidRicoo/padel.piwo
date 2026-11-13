@@ -1,0 +1,123 @@
+import { Plus } from 'lucide-react-native';
+import { View } from 'react-native';
+
+import { AppText, Avatar, Badge, Card, LevelChip } from '@/components/ui';
+import { useTheme } from '@/theme';
+
+import { ScoreLine, type SetScore } from './ScoreLine';
+
+export interface SlotPlayer {
+  name: string;
+  uri?: string | null;
+  me?: boolean;
+}
+
+export type MatchStatus = 'open' | 'full' | 'played' | 'cancelled';
+
+export interface MatchCardProps {
+  /** already formatted in the user's language and time zone, e.g. "Sáb 16 nov · 18:00" */
+  when: string;
+  place: string;
+  duration?: string;
+  typeLabel: string;
+  competitive: boolean;
+  levelRange?: [number, number];
+  /** four slots in order: team A (1, 2), team B (3, 4); null is a free slot */
+  slots: (SlotPlayer | null)[];
+  status: MatchStatus;
+  /** "2 plazas libres", "Completo", "Cancelado"... */
+  statusLabel: string;
+  sets?: SetScore[];
+  /** for a played match, from the viewer's side */
+  result?: { won: boolean; label: string };
+  freeSlotLabel?: string;
+  onPress?: () => void;
+}
+
+export function MatchCard({
+  when,
+  place,
+  duration,
+  typeLabel,
+  competitive,
+  levelRange,
+  slots,
+  status,
+  statusLabel,
+  sets,
+  result,
+  freeSlotLabel = 'Plaza libre',
+  onPress,
+}: MatchCardProps) {
+  const t = useTheme();
+  const cancelled = status === 'cancelled';
+  const summary = [when, place, typeLabel, result?.label, statusLabel].filter(Boolean).join(', ');
+
+  return (
+    <Card onPress={onPress} accessibilityLabel={summary}>
+      <View style={{ gap: t.space[3] }}>
+        <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: t.space[3] }}>
+          <View style={{ flex: 1, gap: 2 }}>
+            <AppText variant="heading" tone={cancelled ? 'textMuted' : 'text'} accessibilityRole="none">
+              {when}
+            </AppText>
+            <AppText variant="bodySm" tone="textMuted">
+              {duration ? `${place} · ${duration}` : place}
+            </AppText>
+          </View>
+          <Badge label={typeLabel} tone={competitive ? 'accent' : 'neutral'} />
+        </View>
+
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: t.space[3] }}>
+          <Team slots={slots.slice(0, 2)} freeSlotLabel={freeSlotLabel} />
+          <AppText variant="caption" tone="textMuted">
+            vs
+          </AppText>
+          <Team slots={slots.slice(2, 4)} freeSlotLabel={freeSlotLabel} />
+        </View>
+
+        <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: t.space[2] }}>
+          {status === 'played' && sets ? <ScoreLine sets={sets} /> : null}
+          {result ? <Badge label={result.label} tone={result.won ? 'success' : 'danger'} /> : null}
+          {status !== 'played' && levelRange ? <LevelChip range={levelRange} size="sm" /> : null}
+          <View style={{ flex: 1 }} />
+          {status !== 'played' ? (
+            <AppText variant="label" tone={status === 'open' ? 'accentText' : 'textMuted'}>
+              {statusLabel}
+            </AppText>
+          ) : null}
+        </View>
+      </View>
+    </Card>
+  );
+}
+
+function Team({ slots, freeSlotLabel }: { slots: (SlotPlayer | null)[]; freeSlotLabel: string }) {
+  const t = useTheme();
+  return (
+    <View style={{ flexDirection: 'row', gap: t.space[1] }}>
+      {slots.map((p, i) =>
+        p ? (
+          <Avatar key={i} name={p.name} uri={p.uri} size={32} me={p.me} />
+        ) : (
+          <View
+            key={i}
+            accessible
+            accessibilityLabel={freeSlotLabel}
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 16,
+              borderWidth: 1.5,
+              borderStyle: 'dashed',
+              borderColor: t.color.borderInput,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+            <Plus color={t.color.textMuted} size={14} />
+          </View>
+        ),
+      )}
+    </View>
+  );
+}
