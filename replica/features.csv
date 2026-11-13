@@ -19,7 +19,7 @@ Confirmar o disputar resultado por el rival,results,must,yes,partial,Mejora sobr
 Recordatorio push al terminar el partido para confirmar el resultado,results,must,no,no,Petición del usuario; no verificado en el original
 El anfitrión confirma el resultado a los 7 días si el rival no lo ha confirmado,results,should,no,partial,Decisión del usuario; no cubre resultados disputados. S07; sin aviso push a los 7 días; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
 Partidos recientes con resultado,results,must,yes,partial,S09; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
-Historial de partidos en el perfil,results,must,yes,partial,Últimos 3 en S11; falta en el perfil de otros (S13)
+Historial de partidos en el perfil,results,must,yes,partial,"S11 (míos) y S13 (de otros, con su victoria o derrota); Pantalla y reglas hechas sobre datos falsos; falta /replica-backend"
 Ranking general,ranking,must,yes,partial,S10; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
 Estadísticas en ranking: jugados ganados win rate,ranking,must,yes,partial,S10; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
 Estadísticas extra: perdidos racha sets,ranking,should,yes,no,
@@ -28,24 +28,24 @@ Ranking entre amigos o seguidos,ranking,could,yes,no,
 Ranking por club,ranking,could,yes,skip,Depende de la red de clubes
 Cálculo de nivel tras partido competitivo,ranking,should,yes,partial,Algoritmo propio tipo Elo; el de Playtomic es propietario. Elo propio en la capa falsa; falta el cuestionario S04
 Ver perfil propio con stats,profile,must,yes,partial,S11; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
-Editar perfil (nombre foto mano posición),profile,must,yes,no,
-Ver perfil de otro jugador,profile,must,yes,no,
-Buscar jugadores,social,should,yes,no,
+Editar perfil (nombre foto mano posición),profile,must,yes,partial,"S12: nombre, ciudad, mano y lado; falta subir foto (backend); Pantalla y reglas hechas sobre datos falsos; falta /replica-backend"
+Ver perfil de otro jugador,profile,must,yes,partial,"S13, también desde el ranking y la búsqueda; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend"
+Buscar jugadores,social,should,yes,partial,S16; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
 Seguir jugadores,social,could,yes,no,
 Notificaciones push (invitación resultado plaza),notifications,must,yes,partial,Necesarias para los recordatorios de resultado. Lista en la app (S15); el push real llega con el backend
 Ajustes (idioma notificaciones borrar cuenta),settings,must,yes,partial,"Borrar cuenta es obligatorio en las tiendas. Idioma, tema y cerrar sesión hechos; faltan notificaciones y borrar cuenta"
 Interfaz en español e inglés,settings,must,yes,yes,Idiomas confirmados por el usuario. Todas las pantallas hechas en es y en; diccionario tipado
 Evento social tras el partido (cerveza / quedada),matches,could,no,no,Idea propia de la marca Padel & Piwo; no existe en el original
-Crear torneo de 8 16 o 32 jugadores,tournaments,must,no,no,En el original los torneos los crean los clubes; aquí cualquier miembro
-Inscripción por parejas eligiendo al compañero por perfil,tournaments,must,yes,no,Compañero elegido de una lista de búsqueda
-El compañero acepta la invitación,tournaments,must,no,no,Solo las parejas aceptadas cuentan para el cupo
-Sorteo aleatorio automático al llenarse el cupo,tournaments,must,no,no,
-Cuadro de eliminación directa,tournaments,must,yes,no,
-El ganador avanza al confirmarse el resultado,tournaments,must,no,no,Reutiliza el flujo de resultado de los partidos
-El organizador fija el resultado si hay bloqueo,tournaments,should,no,no,
-Retirar pareja antes del sorteo,tournaments,should,no,no,
-Cancelar torneo (organizador),tournaments,should,no,no,
-Notificaciones de torneo (invitación sorteo partido listo campeón),tournaments,should,no,no,
+Crear torneo de 8 16 o 32 jugadores,tournaments,must,no,partial,En el original los torneos los crean los clubes; aquí cualquier miembro. S18; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
+Inscripción por parejas eligiendo al compañero por perfil,tournaments,must,yes,partial,Compañero elegido de una lista de búsqueda. S20; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
+El compañero acepta la invitación,tournaments,must,no,partial,Solo las parejas aceptadas cuentan para el cupo. S17 y S19; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
+Sorteo aleatorio automático al llenarse el cupo,tournaments,must,no,partial,Al aceptar la última pareja; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
+Cuadro de eliminación directa,tournaments,must,yes,partial,"S21, cada cruce abre su partido; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend"
+El ganador avanza al confirmarse el resultado,tournaments,must,no,partial,Reutiliza el flujo de resultado de los partidos. Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
+El organizador fija el resultado si hay bloqueo,tournaments,should,no,partial,S07 y S08 en modo organizador; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
+Retirar pareja antes del sorteo,tournaments,should,no,partial,S19; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
+Cancelar torneo (organizador),tournaments,should,no,partial,S19; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
+Notificaciones de torneo (invitación sorteo partido listo campeón),tournaments,should,no,partial,Lista en la app (S15); el push real llega con el backend
 Si el organizador borra su cuenta el torneo pasa a un jugador inscrito,tournaments,should,no,no,Decisión del usuario; elige a quien se inscribió primero
 Reprogramar partido de torneo,tournaments,could,no,no,
 Reserva de pista en clubes,booking,could,yes,skip,Fuera de alcance: red de clubes y disponibilidad en tiempo real
