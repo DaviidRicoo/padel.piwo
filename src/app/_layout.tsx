@@ -5,6 +5,8 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo } from 'react';
 
 import { ToastProvider } from '@/components/ui';
+import { ApiProvider, useUserId } from '@/data/provider';
+import { I18nProvider } from '@/i18n';
 import { AppThemeProvider, useTheme } from '@/theme';
 import { fontAssets } from '@/theme/fonts';
 
@@ -21,14 +23,19 @@ export default function RootLayout() {
 
   return (
     <AppThemeProvider>
-      <ThemedNavigation />
+      <I18nProvider>
+        <ApiProvider>
+          <ThemedNavigation />
+        </ApiProvider>
+      </I18nProvider>
     </AppThemeProvider>
   );
 }
 
-/** Feeds our tokens into the navigation theme, so headers and screen backgrounds follow light and dark. */
+/** Feeds our tokens into the navigation theme, and shows the app or the sign-in screens. */
 function ThemedNavigation() {
   const t = useTheme();
+  const userId = useUserId();
   const navTheme = useMemo(() => {
     const base = t.name === 'dark' ? DarkTheme : DefaultTheme;
     return {
@@ -48,16 +55,14 @@ function ThemedNavigation() {
   return (
     <ThemeProvider value={navTheme}>
       <StatusBar style={t.name === 'dark' ? 'light' : 'dark'} />
-      <ToastProvider>
-        <Stack
-          screenOptions={{
-            headerStyle: { backgroundColor: t.color.surface },
-            headerTintColor: t.color.accentText,
-            headerTitleStyle: { fontFamily: t.type.heading.fontFamily, color: t.color.text },
-            contentStyle: { backgroundColor: t.color.bg },
-          }}>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="design" options={{ title: 'Sistema de diseño' }} />
+      <ToastProvider bottomOffset={t.layout.tabBar}>
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.color.bg } }}>
+          <Stack.Protected guard={!!userId}>
+            <Stack.Screen name="(app)" />
+          </Stack.Protected>
+          <Stack.Protected guard={!userId}>
+            <Stack.Screen name="(auth)" />
+          </Stack.Protected>
         </Stack>
       </ToastProvider>
     </ThemeProvider>

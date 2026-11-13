@@ -1,7 +1,7 @@
 import { Plus } from 'lucide-react-native';
 import { View } from 'react-native';
 
-import { AppText, Avatar, Badge, Card, LevelChip } from '@/components/ui';
+import { AppText, Avatar, Badge, Card, LevelChip, type BadgeTone } from '@/components/ui';
 import { useTheme } from '@/theme';
 
 import { ScoreLine, type SetScore } from './ScoreLine';
@@ -27,9 +27,10 @@ export interface MatchCardProps {
   status: MatchStatus;
   /** "2 plazas libres", "Completo", "Cancelado"... */
   statusLabel: string;
+  /** the score, once a result has been sent (confirmed or not) */
   sets?: SetScore[];
-  /** for a played match, from the viewer's side */
-  result?: { won: boolean; label: string };
+  /** from the viewer's side: win, loss, to confirm, disputed, result missing */
+  resultBadge?: { label: string; tone: BadgeTone };
   freeSlotLabel?: string;
   onPress?: () => void;
 }
@@ -45,13 +46,13 @@ export function MatchCard({
   status,
   statusLabel,
   sets,
-  result,
+  resultBadge,
   freeSlotLabel = 'Plaza libre',
   onPress,
 }: MatchCardProps) {
   const t = useTheme();
   const cancelled = status === 'cancelled';
-  const summary = [when, place, typeLabel, result?.label, statusLabel].filter(Boolean).join(', ');
+  const summary = [when, place, typeLabel, resultBadge?.label, sets ? null : statusLabel].filter(Boolean).join(', ');
 
   return (
     <Card onPress={onPress} accessibilityLabel={summary}>
@@ -77,11 +78,11 @@ export function MatchCard({
         </View>
 
         <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: t.space[2] }}>
-          {status === 'played' && sets ? <ScoreLine sets={sets} /> : null}
-          {result ? <Badge label={result.label} tone={result.won ? 'success' : 'danger'} /> : null}
-          {status !== 'played' && levelRange ? <LevelChip range={levelRange} size="sm" /> : null}
+          {sets ? <ScoreLine sets={sets} /> : null}
+          {resultBadge ? <Badge label={resultBadge.label} tone={resultBadge.tone} /> : null}
+          {!sets && !resultBadge && status !== 'played' && levelRange ? <LevelChip range={levelRange} size="sm" /> : null}
           <View style={{ flex: 1 }} />
-          {status !== 'played' ? (
+          {!sets && !resultBadge && status !== 'played' ? (
             <AppText variant="label" tone={status === 'open' ? 'accentText' : 'textMuted'}>
               {statusLabel}
             </AppText>
