@@ -1,40 +1,40 @@
 feature,area,priority,original,clone,notes
-Registro con email y contraseña (abierto),onboarding,must,yes,no,Registro abierto sin código de invitación
-Inicio de sesión y cerrar sesión,onboarding,must,yes,no,
+Registro con email y contraseña (abierto),onboarding,must,yes,partial,Registro abierto sin código de invitación. S02; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
+Inicio de sesión y cerrar sesión,onboarding,must,yes,partial,S03 y S14; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
 Registro con Google / Apple,onboarding,should,yes,no,Apple obligatorio en iOS si hay login social
-Recuperar contraseña,onboarding,must,yes,no,
+Recuperar contraseña,onboarding,must,yes,partial,Pantalla hecha; no envía correo hasta el backend
 Cuestionario inicial para asignar nivel,onboarding,should,yes,no,Versión propia de 5-8 preguntas
-Crear partido (fecha hora duración lugar tipo plazas),matches,must,yes,no,La duración decide cuándo salta el recordatorio del resultado
-Partido amistoso o competitivo,matches,must,yes,no,Solo el competitivo mueve ranking y nivel
-Rango de nivel permitido en el partido,matches,should,yes,no,
-Lista de partidos abiertos,matches,must,yes,no,
-Unirse a un partido con plaza libre,matches,must,yes,no,
-Solicitar plaza fuera del rango de nivel,matches,could,yes,no,El anfitrión acepta o rechaza
-Salir de un partido,matches,must,yes,no,
-Cancelar partido (anfitrión),matches,must,yes,no,
-Detalle de partido con jugadores y equipos,matches,must,yes,no,
+Crear partido (fecha hora duración lugar tipo plazas),matches,must,yes,partial,La duración decide cuándo salta el recordatorio del resultado. S06; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
+Partido amistoso o competitivo,matches,must,yes,partial,Solo el competitivo mueve ranking y nivel. Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
+Rango de nivel permitido en el partido,matches,should,yes,partial,Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
+Lista de partidos abiertos,matches,must,yes,partial,S05; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
+Unirse a un partido con plaza libre,matches,must,yes,partial,S07; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
+Solicitar plaza fuera del rango de nivel,matches,could,yes,partial,El anfitrión acepta o rechaza. Solicitar y aceptar hechos; falta rechazar; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
+Salir de un partido,matches,must,yes,partial,Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
+Cancelar partido (anfitrión),matches,must,yes,partial,Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
+Detalle de partido con jugadores y equipos,matches,must,yes,partial,S07; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
 Invitar a jugadores por enlace,matches,should,yes,no,
-Introducir resultado por sets,results,must,yes,no,
-Confirmar o disputar resultado por el rival,results,must,yes,no,Mejora sobre el original si se hace bien
+Introducir resultado por sets,results,must,yes,partial,S08; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
+Confirmar o disputar resultado por el rival,results,must,yes,partial,Mejora sobre el original si se hace bien. S07; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
 Recordatorio push al terminar el partido para confirmar el resultado,results,must,no,no,Petición del usuario; no verificado en el original
-El anfitrión confirma el resultado a los 7 días si el rival no lo ha confirmado,results,should,no,no,Decisión del usuario; no cubre resultados disputados
-Partidos recientes con resultado,results,must,yes,no,
-Historial de partidos en el perfil,results,must,yes,no,
-Ranking general,ranking,must,yes,no,
-Estadísticas en ranking: jugados ganados win rate,ranking,must,yes,no,
+El anfitrión confirma el resultado a los 7 días si el rival no lo ha confirmado,results,should,no,partial,Decisión del usuario; no cubre resultados disputados. S07; sin aviso push a los 7 días; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
+Partidos recientes con resultado,results,must,yes,partial,S09; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
+Historial de partidos en el perfil,results,must,yes,partial,Últimos 3 en S11; falta en el perfil de otros (S13)
+Ranking general,ranking,must,yes,partial,S10; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
+Estadísticas en ranking: jugados ganados win rate,ranking,must,yes,partial,S10; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
 Estadísticas extra: perdidos racha sets,ranking,should,yes,no,
-Filtro de ranking por periodo (temporada / total),ranking,should,yes,no,
+Filtro de ranking por periodo (temporada / total),ranking,should,yes,partial,Temporada desde el 1 de septiembre; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
 Ranking entre amigos o seguidos,ranking,could,yes,no,
 Ranking por club,ranking,could,yes,skip,Depende de la red de clubes
-Cálculo de nivel tras partido competitivo,ranking,should,yes,no,Algoritmo propio tipo Elo; el de Playtomic es propietario
-Ver perfil propio con stats,profile,must,yes,no,
+Cálculo de nivel tras partido competitivo,ranking,should,yes,partial,Algoritmo propio tipo Elo; el de Playtomic es propietario. Elo propio en la capa falsa; falta el cuestionario S04
+Ver perfil propio con stats,profile,must,yes,partial,S11; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
 Editar perfil (nombre foto mano posición),profile,must,yes,no,
 Ver perfil de otro jugador,profile,must,yes,no,
 Buscar jugadores,social,should,yes,no,
 Seguir jugadores,social,could,yes,no,
-Notificaciones push (invitación resultado plaza),notifications,must,yes,no,Necesarias para los recordatorios de resultado
-Ajustes (idioma notificaciones borrar cuenta),settings,must,yes,no,Borrar cuenta es obligatorio en las tiendas
-Interfaz en español e inglés,settings,must,yes,no,Idiomas confirmados por el usuario
+Notificaciones push (invitación resultado plaza),notifications,must,yes,partial,Necesarias para los recordatorios de resultado. Lista en la app (S15); el push real llega con el backend
+Ajustes (idioma notificaciones borrar cuenta),settings,must,yes,partial,"Borrar cuenta es obligatorio en las tiendas. Idioma, tema y cerrar sesión hechos; faltan notificaciones y borrar cuenta"
+Interfaz en español e inglés,settings,must,yes,yes,Idiomas confirmados por el usuario. Todas las pantallas hechas en es y en; diccionario tipado
 Evento social tras el partido (cerveza / quedada),matches,could,no,no,Idea propia de la marca Padel & Piwo; no existe en el original
 Crear torneo de 8 16 o 32 jugadores,tournaments,must,no,no,En el original los torneos los crean los clubes; aquí cualquier miembro
 Inscripción por parejas eligiendo al compañero por perfil,tournaments,must,yes,no,Compañero elegido de una lista de búsqueda
