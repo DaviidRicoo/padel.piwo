@@ -6,6 +6,7 @@ import { MatchCard } from '@/components/app';
 import { AppText, Avatar, Button, Card, ErrorState, LevelChip, LoadingCards, Screen } from '@/components/ui';
 import { useApi, useQuery, useUserId } from '@/data/provider';
 import { loadPeople, toMatchCard } from '@/features/matches';
+import { profileSubtitle } from '@/features/players';
 import { SectionTitle } from '@/features/SectionTitle';
 import { useI18n } from '@/i18n';
 import { useTheme } from '@/theme';
@@ -52,9 +53,9 @@ export default function ProfileScreen() {
           {profile.displayName}
         </AppText>
         <LevelChip value={profile.level} locale={i18n.intlLocale} prefix={tr('common.level')} centered />
-        {profile.city ? (
-          <AppText variant="bodySm" tone="textMuted">
-            {profile.city}
+        {profileSubtitle(profile, i18n) ? (
+          <AppText variant="bodySm" tone="textMuted" align="center">
+            {profileSubtitle(profile, i18n)}
           </AppText>
         ) : null}
       </View>

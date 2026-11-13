@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { CircleAlert, ClipboardPen, LogOut, UserPlus } from 'lucide-react-native';
+import { CircleAlert, ClipboardPen, Gavel, LogOut, Trophy, UserPlus } from 'lucide-react-native';
 import { useState, type ReactNode } from 'react';
 import { View } from 'react-native';
 
@@ -28,6 +28,7 @@ export default function MatchDetail() {
   const toast = useToast();
   const [dialog, setDialog] = useState<Dialog>(null);
   const now = useNow();
+  const theme = useTheme();
 
   const q = useQuery(`match-${id}`, async () => {
     const m = await api.getMatch(id);
@@ -84,11 +85,22 @@ export default function MatchDetail() {
           onHostConfirm={() => run('hostConfirm', () => api.hostConfirmResult(m.id), t('matchDetail.confirmed'))}
         />
       ) : null}
-      {m.notes ? (
-        <View style={{ gap: 4 }}>
+      {a.canOrganizerSet ? (
+        <Card>
+          <View style={{ gap: theme.space[2] }}>
+            <AppText variant="bodySm" tone="textMuted">
+              {t('matchDetail.organizerSetHelp')}
+            </AppText>
+            <Button label={t('matchDetail.organizerSet')} variant="gold" icon={Gavel} onPress={() => router.push(`/match/${m.id}/result?as=organizer`)} />
+          </View>
+        </Card>
+      ) : null}
+      {/* tournament matches carry the tournament's name as notes; the header already shows it */}
+      {m.notes && !m.tournamentId ? (
+        <>
           <SectionTitle>{t('matchDetail.notes')}</SectionTitle>
           <AppText>{m.notes}</AppText>
-        </View>
+        </>
       ) : null}
 
       <ConfirmDialog
@@ -154,6 +166,13 @@ function Header({ m, people }: { m: Match; people: People }) {
         <Badge label={m.type === 'competitive' ? tr('match.typeCompetitive') : tr('match.typeFriendly')} tone={m.type === 'competitive' ? 'accent' : 'neutral'} />
         {fullRange ? null : <LevelChip range={[m.levelMin, m.levelMax]} size="sm" locale={i18n.intlLocale} prefix={tr('common.level')} />}
       </View>
+      {m.tournamentId ? (
+        // a tournament match keeps the tournament's name in its notes (create_tie_match)
+        <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: t.space[2] }}>
+          <Badge label={tr('matchDetail.tournament', { name: m.notes ?? '' })} tone="gold" icon={Trophy} />
+          <Button label={tr('matchDetail.seeTournament')} variant="ghost" size="sm" onPress={() => router.push(`/tournament/${m.tournamentId}`)} />
+        </View>
+      ) : null}
     </View>
   );
 }

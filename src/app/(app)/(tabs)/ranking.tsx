@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { Medal } from 'lucide-react-native';
 import { useState } from 'react';
 import { View } from 'react-native';
@@ -53,6 +54,7 @@ export default function RankingScreen() {
       columns,
       positionLabel: tr('ranking.position'),
       locale: i18n.intlLocale,
+      onPress: () => (r.playerId === me ? router.navigate('/profile') : router.push(`/player/${r.playerId}`)),
     };
   }
 

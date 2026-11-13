@@ -65,8 +65,12 @@ function Item({ n, actor }: { n: AppNotification; actor?: string }) {
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`${text}, ${i18n.formatWhen(n.createdAt)}`}
-      disabled={!n.matchId}
-      onPress={() => n.matchId && router.push(`/match/${n.matchId}`)}
+      disabled={!n.matchId && !n.tournamentId}
+      onPress={() => {
+        // a match first (a tournament match too); otherwise the tournament
+        if (n.matchId) router.push(`/match/${n.matchId}`);
+        else if (n.tournamentId) router.push(`/tournament/${n.tournamentId}`);
+      }}
       {...focus.handlers}
       style={({ pressed }) => [
         {

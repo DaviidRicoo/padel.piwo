@@ -12,8 +12,10 @@ import { loadPeople, nameOf } from '@/features/matches';
 import { useI18n } from '@/i18n';
 
 // S08 Enter the result, set by set. The other team then confirms it on S07.
+// With ?as=organizer the tournament organizer sets it, and it counts straight away.
 export default function EnterResult() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, as } = useLocalSearchParams<{ id: string; as?: string }>();
+  const asOrganizer = as === 'organizer';
   const api = useApi();
   const me = useUserId();
   const { t } = useI18n();
@@ -43,7 +45,8 @@ export default function EnterResult() {
     );
 
   const { m, people } = q.data;
-  if (!matchActions(m, me).canSubmitResult) {
+  const allowed = asOrganizer ? matchActions(m, me).canOrganizerSet : matchActions(m, me).canSubmitResult;
+  if (!allowed) {
     return (
       <Screen>
         <EmptyState icon={ClipboardX} title={t('errors.result_not_allowed')} actionLabel={t('matchDetail.keep')} onAction={() => router.back()} />
@@ -68,13 +71,15 @@ export default function EnterResult() {
   async function submit() {
     setTried(true);
     if (anyTie || winsA === winsB) return;
-    const ok = await run('submit', () => api.submitResult(m.id, sets), t('result.sent'));
+    const ok = asOrganizer
+      ? await run('submit', () => api.organizerSetResult(m.id, sets), t('result.organizerSent'))
+      : await run('submit', () => api.submitResult(m.id, sets), t('result.sent'));
     if (ok) router.back();
   }
 
   return (
     <Screen footer={<Button label={t('result.submit')} size="lg" fullWidth loading={busy === 'submit'} onPress={submit} />}>
-      <AppText tone="textMuted">{t('result.help')}</AppText>
+      <AppText tone="textMuted">{asOrganizer ? t('result.organizerHelp') : t('result.help')}</AppText>
       <Legend teamA={teamA} teamB={teamB} />
       {sets.map((s, i) => (
         <SetScoreRow
