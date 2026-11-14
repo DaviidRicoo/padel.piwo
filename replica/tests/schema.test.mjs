@@ -33,6 +33,8 @@ await db.exec(`
   alter default privileges in schema public grant all on functions to anon, authenticated;
 `);
 await db.exec(schema);
+// the advisors' fixes (migration 3); migration 2 needs pg_cron and Vault, which PGlite lacks
+await db.exec(readFileSync(new URL('../../supabase/migrations/20261114000300_hardening.sql', import.meta.url), 'utf8'));
 
 // ---------------------------------------------------------------- helpers
 const su = async (sql, params = []) => { await db.exec('reset role'); return db.query(sql, params); };
