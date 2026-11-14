@@ -26,7 +26,7 @@ Actual: 51 `aria-required-attr` violations on S06 alone (role radio with no `ari
 Evidence: `e2e/a11y.spec.ts` (S06, S08, S10, S12, S14, S18, S20, light and dark); axe rule `aria-required-attr`.
 Suspected cause: react-native-web 0.21 ignores `accessibilityState` and `accessibilityValue`; it reads the `aria-*` props.
 Fix: `aria-checked`, `aria-disabled`, `aria-busy`, `aria-value*` props in ChipGroup, SegmentedControl, Button, ListItem, ProgressBar, SelectField, PlayerSlot and PlayerRow (React Native reads them on phones too). The Stepper stays one "adjustable" element on phones; on the web it is a named group with "Bajar: …" and "Subir: …" buttons and a live value.
-Status: fixed in the `/replica-test` commit on `design/refresh`; the a11y suite now passes on all 19 screens in both themes.
+Status: fixed in b3630ff (`design/refresh`); the a11y suite now passes on all 19 screens in both themes.
 
 ### BUG-001: a name that ends in an emoji shows half a character in the avatar
 
@@ -44,7 +44,7 @@ Actual: "Z" followed by a replacement character (half of the emoji's surrogate p
 Evidence: `e2e/results/.../test-failed-1.png` from the first run; test F01-H1.
 Suspected cause: `initials()` took `word[0]`, a UTF-16 code unit, from the first and last words.
 Fix: take the first letter (`\p{L}`) of the first and last words that have one.
-Status: fixed in the `/replica-test` commit on `design/refresh`.
+Status: fixed in b3630ff (`design/refresh`).
 
 ### BUG-004: a match card's spoken name repeats its status and leaves out the score
 
@@ -61,7 +61,7 @@ Expected: "…, Falta el resultado" once; a played match says its score, e.g. "6
 Actual: "…, Competitivo, Falta el resultado, Falta el resultado"; played matches say "Victoria" with no score.
 Evidence: aria-labels read in the axe probe of S09.
 Fix: `MatchCard` adds the score and drops repeated parts.
-Status: fixed in the `/replica-test` commit on `design/refresh`.
+Status: fixed in b3630ff (`design/refresh`).
 
 ### BUG-003: cards and rows are named with a summary that leaves out some visible text
 
