@@ -1,5 +1,5 @@
 feature,area,priority,original,clone,notes
-Registro con email y contraseña (abierto),onboarding,must,yes,partial,"Registro abierto sin código de invitación. S02; Pantalla, reglas y backend Supabase escritos; falta conectar el proyecto y probarlo en real"
+Registro con email y contraseña (abierto),onboarding,must,yes,yes,"Probado en real (2026-11-14): registro, correo con código por Gmail (llegó rápido, no fue a spam), confirmación y entrada; perfil creado por el trigger"
 Inicio de sesión y cerrar sesión,onboarding,must,yes,partial,"S03 y S14; Pantalla, reglas y backend Supabase escritos; falta conectar el proyecto y probarlo en real"
 Registro con Google / Apple,onboarding,should,yes,no,Apple obligatorio en iOS si hay login social
 Recuperar contraseña,onboarding,must,yes,partial,Con código de 6 cifras por correo (Gmail SMTP); falta probarlo en real
