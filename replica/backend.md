@@ -6,6 +6,18 @@ Fecha: 2026-11-14. Rama: `build/backend`.
 
 ## Estado
 
+**Conectado y probado contra el proyecto real** (`app-padel-result`, eu-west-1, 2026-11-14):
+- **Proyecto:** 3 migraciones aplicadas. El revisor de seguridad de Supabase solo deja los avisos intencionados (las 18 funciones que llama la app). Config de auth subida, con SMTP de Gmail y plantillas. Edge Functions desplegadas y secretos de Vault creados.
+- **Registro:** registro real con código por correo, probado por el propietario. El correo llegó rápido y no fue a spam.
+- **Recorridos automáticos, con datos inventados, 24 pasos:**
+  - el bucle principal (12 pasos);
+  - la tanda 2: perfiles, búsqueda y torneos completos (7 pasos);
+  - acciones extra (5 pasos): disputar, salir, cancelar, confirmación del anfitrión, retirar pareja, cancelar torneo y borrar cuenta. El borrado elimina de verdad el acceso y anonimiza el perfil.
+  - Cero errores de consola.
+- **Push:** `pg_cron` llama a `send-push` cada minuto con el secreto correcto (respuestas 200) y los avisos se reparten. Ninguno ha llegado a un móvil porque falta una build con token push.
+- **Encontrado y corregido en real:** la lista de torneos fallaba con `PGRST201`. `tournaments` y `tournament_pairs` están unidas por dos claves foráneas, y la consulta ahora indica cuál seguir. Los datos falsos no podían destapar este fallo.
+- **Pendiente de probar en real:** recuperar contraseña (necesita un buzón real) y el traspaso de un torneo cuando su organizador borra la cuenta (probado solo en SQL).
+
 **Escrito y probado:**
 - **SQL:** el esquema, las funciones y la seguridad por filas, en `supabase/migrations/20261114000100_schema.sql`. Pasan 22 de 22 pruebas en un Postgres en memoria: `replica/tests/schema.test.mjs`.
 - **Pantallas:** registro con código, recuperar contraseña con código, cerrar sesión en todos los dispositivos y borrar cuenta, sobre la capa falsa. Los dos recorridos completos (17 pasos) siguen pasando.

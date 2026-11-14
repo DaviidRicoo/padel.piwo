@@ -81,7 +81,9 @@ const MATCH =
   ' match_players(player_id, slot, status),' +
   ' match_results(submitted_by, winner_team, status, confirmed_by, created_at),' +
   ' set_scores(set_number, team_a_games, team_b_games)';
-const TOURNAMENT = '*, tournament_pairs(*), tournament_ties(*)';
+// tournaments and tournament_pairs are linked twice (pairs belong to a tournament; the
+// tournament points at its champion pair), so the embed must name which foreign key to follow
+const TOURNAMENT = '*, tournament_pairs!tournament_pairs_tournament_id_fkey(*), tournament_ties(*)';
 
 const toProfile = (r: ProfileRow): Profile => ({
   id: r.id,
