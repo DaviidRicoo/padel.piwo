@@ -1,21 +1,18 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { View } from 'react-native';
 
-import { MatchCard } from '@/components/app';
-import { AppText, Avatar, Card, ErrorState, LevelChip, LoadingCards, Screen } from '@/components/ui';
+import { MatchCard, ProfileHeader } from '@/components/app';
+import { AppText, ErrorState, LoadingCards, Screen } from '@/components/ui';
 import { useApi, useQuery, useUserId } from '@/data/provider';
 import { loadPeople, toMatchCard } from '@/features/matches';
 import { profileSubtitle } from '@/features/players';
 import { SectionTitle } from '@/features/SectionTitle';
 import { useI18n } from '@/i18n';
-import { useTheme } from '@/theme';
 
 const RECENT = 5;
 
 // S13 Another player's profile: level, numbers and latest matches. Read only.
 export default function PlayerProfile() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const t = useTheme();
   const api = useApi();
   const me = useUserId();
   const i18n = useI18n();
@@ -50,34 +47,17 @@ export default function PlayerProfile() {
 
   return (
     <Screen onRefresh={q.refetch}>
-      <View style={{ alignItems: 'center', gap: t.space[2] }}>
-        <Avatar name={profile.displayName} uri={profile.avatarUrl} size={88} deleted={profile.isDeleted} />
-        <AppText variant="title" align="center">
-          {profile.displayName}
-        </AppText>
-        <LevelChip value={profile.level} locale={i18n.intlLocale} prefix={tr('common.level')} centered />
-        {subtitle ? (
-          <AppText variant="bodySm" tone="textMuted" align="center">
-            {subtitle}
-          </AppText>
-        ) : null}
-      </View>
-
-      <SectionTitle>{tr('profile.stats')}</SectionTitle>
-      <View style={{ flexDirection: 'row', gap: t.space[2] }}>
-        {numbers.map((n) => (
-          <Card key={n.label} style={{ flex: 1 }} padding={t.space[3]}>
-            <View accessible accessibilityLabel={`${n.label}: ${n.value}`} style={{ alignItems: 'center', gap: 2 }}>
-              <AppText variant="title" numeric accessibilityRole="none">
-                {n.value}
-              </AppText>
-              <AppText variant="caption" tone="textMuted">
-                {n.label}
-              </AppText>
-            </View>
-          </Card>
-        ))}
-      </View>
+      <ProfileHeader
+        name={profile.displayName}
+        uri={profile.avatarUrl}
+        deleted={profile.isDeleted}
+        level={profile.level}
+        levelPrefix={tr('common.level')}
+        locale={i18n.intlLocale}
+        subtitle={subtitle}
+        stats={numbers}
+        statsLabel={tr('profile.stats')}
+      />
 
       <SectionTitle>{tr('player.matches')}</SectionTitle>
       {latest.length === 0 ? (

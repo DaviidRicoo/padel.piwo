@@ -58,7 +58,7 @@ export function PlayerSlot({
     <View
       accessible
       accessibilityLabel={[player.name, me ? meLabel : null, requested ? requestedLabel : null].filter(Boolean).join(', ')}
-      style={[box, { backgroundColor: t.color.surface, borderWidth: 1, borderColor: me ? t.color.accent : t.color.border }]}>
+      style={[box, { backgroundColor: t.color.surface, borderWidth: me ? 1.5 : 0, borderColor: me ? t.color.accent : undefined }]}>
       <Avatar name={player.name} uri={player.uri} size={40} me={me} />
       <AppText variant="label" numberOfLines={1} align="center">
         {me ? meLabel : player.name}

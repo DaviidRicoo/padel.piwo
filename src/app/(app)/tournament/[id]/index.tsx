@@ -190,7 +190,7 @@ function Pairs({ tour, people }: { tour: Tournament; people: People }) {
       </AppText>
     );
   return (
-    <View style={{ borderRadius: t.radius.lg, overflow: 'hidden', borderWidth: 1, borderColor: t.color.border }}>
+    <View style={{ borderRadius: t.radius.lg, overflow: 'hidden' }}>
       {live.map((p, i) => (
         <View
           key={p.id}
@@ -243,7 +243,7 @@ function Notice({ text, tone = 'warning' }: { text: string; tone?: 'warning' | '
   const t = useTheme();
   const color = tone === 'warning' ? t.color.warning : t.color.accentText;
   return (
-    <View accessibilityLiveRegion="polite" style={{ flexDirection: 'row', gap: t.space[2], padding: t.space[3], borderRadius: t.radius.md, borderWidth: 1, borderColor: color, backgroundColor: t.color.surface }}>
+    <View accessibilityLiveRegion="polite" style={{ flexDirection: 'row', gap: t.space[2], padding: t.space[3], borderRadius: t.radius.md, backgroundColor: tone === 'warning' ? t.color.warningSoft : t.color.accentSoft }}>
       <CircleAlert color={color} size={20} />
       <AppText variant="bodySm" style={{ flex: 1 }}>
         {text}

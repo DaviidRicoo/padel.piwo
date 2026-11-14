@@ -240,7 +240,7 @@ try {
 
   await step('S11 profile', async () => {
     await click('Perfil');
-    await waitText('Estadísticas');
+    await waitText('Victorias'); // the stats strip (played, won, win rate)
     await shot('S11');
   });
 

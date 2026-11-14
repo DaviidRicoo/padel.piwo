@@ -7,6 +7,10 @@ import { AppText } from './AppText';
 import { useFocusRing } from './focus';
 import type { IconType } from './types';
 
+/** width of the icon tile; a Group of icon rows insets its hairlines by tile + gaps */
+export const ICON_TILE = 32;
+export const ICON_ROW_INSET = 16 + ICON_TILE + 12;
+
 type Trailing = { kind: 'chevron' } | { kind: 'value'; text: string } | { kind: 'switch'; value: boolean } | { kind: 'none' };
 
 export interface ListItemProps {
@@ -46,7 +50,19 @@ export function ListItem({ title, subtitle, icon: Icon, trailing = { kind: 'chev
         },
         focus.ring,
       ]}>
-      {Icon ? <Icon color={t.color[fg]} size={20} /> : null}
+      {Icon ? (
+        <View
+          style={{
+            width: ICON_TILE,
+            height: ICON_TILE,
+            borderRadius: t.radius.sm,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: tone === 'danger' ? t.color.dangerSoft : t.color.accentSoft,
+          }}>
+          <Icon color={tone === 'danger' ? t.color.danger : t.color.accentText} size={18} strokeWidth={2} />
+        </View>
+      ) : null}
       <View style={{ flex: 1 }}>
         <AppText tone={fg}>{title}</AppText>
         {subtitle ? (

@@ -58,8 +58,10 @@ export function Button({
       style={({ pressed }) => [
         {
           height,
-          paddingHorizontal: size === 'sm' ? t.space[3] : t.space[5],
-          borderRadius: t.radius.md,
+          paddingHorizontal: size === 'sm' ? t.space[4] : t.space[6],
+          // the pill is the action shape; cards and fields keep the rounded rectangle
+          borderRadius: t.radius.pill,
+          transform: pressed && !inactive ? [{ scale: t.scale.pressed }] : undefined,
           backgroundColor: v.bg ? t.color[v.bg] : 'transparent',
           borderWidth: v.border ? 1 : 0,
           borderColor: v.border ? t.color[v.border] : undefined,

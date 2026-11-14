@@ -97,7 +97,7 @@ export function Bracket({ rounds, champion, championLabel = 'Campeones', tbdLabe
 function TieBox({ label, onPress, children }: { label: string; onPress?: () => void; children: ReactNode }) {
   const t = useTheme();
   const focus = useFocusRing();
-  const box = { gap: t.space[1], padding: t.space[3], borderRadius: t.radius.md, borderWidth: 1, borderColor: t.color.border, backgroundColor: t.color.surface };
+  const box = { gap: t.space[1], padding: t.space[3], borderRadius: t.radius.md, backgroundColor: t.color.surface };
   if (!onPress) {
     return (
       <View accessible accessibilityLabel={label} style={box}>

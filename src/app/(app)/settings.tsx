@@ -3,7 +3,7 @@ import { Brush, LogOut, MonitorSmartphone, Trash2 } from 'lucide-react-native';
 import { useState } from 'react';
 import { View } from 'react-native';
 
-import { AppText, ConfirmDialog, ListItem, Screen, SegmentedControl } from '@/components/ui';
+import { AppText, ConfirmDialog, Group, ICON_ROW_INSET, ListItem, Screen, SegmentedControl } from '@/components/ui';
 import { useApi } from '@/data/provider';
 import type { Locale } from '@/data/types';
 import { useAction } from '@/data/useAction';
@@ -35,9 +35,11 @@ export default function Settings() {
   }
 
   return (
-    <Screen flush>
-      <View style={{ gap: t.space[2], paddingHorizontal: t.layout.gutter }}>
-        <AppText variant="label">{tr('settings.language')}</AppText>
+    <Screen>
+      <View style={{ gap: t.space[2] }}>
+        <AppText variant="label" tone="textMuted">
+          {tr('settings.language')}
+        </AppText>
         <SegmentedControl
           accessibilityLabel={tr('settings.language')}
           value={i18n.locale}
@@ -48,8 +50,10 @@ export default function Settings() {
           ]}
         />
       </View>
-      <View style={{ gap: t.space[2], paddingHorizontal: t.layout.gutter }}>
-        <AppText variant="label">{tr('settings.theme')}</AppText>
+      <View style={{ gap: t.space[2] }}>
+        <AppText variant="label" tone="textMuted">
+          {tr('settings.theme')}
+        </AppText>
         <SegmentedControl<ThemeMode>
           accessibilityLabel={tr('settings.theme')}
           value={t.mode}
@@ -61,12 +65,16 @@ export default function Settings() {
           ]}
         />
       </View>
-      <View style={{ borderTopWidth: 1, borderBottomWidth: 1, borderColor: t.color.border }}>
-        <ListItem title={tr('settings.designSystem')} icon={Brush} onPress={() => router.push('/design')} />
+      <View style={{ height: t.space[2] }} />
+      <Group inset={ICON_ROW_INSET}>
+        {/* the design-system page is a tool for whoever builds the app, not for residents */}
+        {__DEV__ ? <ListItem title={tr('settings.designSystem')} icon={Brush} onPress={() => router.push('/design')} /> : null}
         <ListItem title={tr('settings.signOut')} icon={LogOut} trailing={{ kind: 'none' }} onPress={() => setDialog('signOut')} />
         <ListItem title={tr('settings.signOutEverywhere')} icon={MonitorSmartphone} trailing={{ kind: 'none' }} onPress={() => setDialog('signOutEverywhere')} />
+      </Group>
+      <Group>
         <ListItem title={tr('settings.deleteAccount')} icon={Trash2} tone="danger" trailing={{ kind: 'none' }} onPress={() => setDialog('delete')} />
-      </View>
+      </Group>
 
       <ConfirmDialog
         visible={dialog === 'signOut'}

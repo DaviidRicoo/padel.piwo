@@ -3,8 +3,8 @@ import { SearchX } from 'lucide-react-native';
 import { useState } from 'react';
 import { View } from 'react-native';
 
-import { PlayerRow } from '@/components/app';
-import { EmptyState, ErrorState, LoadingCards, Screen, TextField } from '@/components/ui';
+import { PLAYER_ROW_INSET, PlayerRow } from '@/components/app';
+import { EmptyState, ErrorState, Group, LoadingCards, Screen, TextField } from '@/components/ui';
 import { useApi, useQuery } from '@/data/provider';
 import { useI18n } from '@/i18n';
 import { useTheme } from '@/theme';
@@ -32,12 +32,12 @@ export default function SearchPlayers() {
       ) : !q.data?.length ? (
         <EmptyState icon={SearchX} title={tr('search.emptyTitle')} body={tr('search.emptyBody')} />
       ) : (
-        <View style={{ borderTopWidth: 1, borderColor: t.color.border }} accessibilityLiveRegion="polite">
-          {q.data.map((p) => (
-            <View key={p.id} style={{ borderBottomWidth: 1, borderColor: t.color.border }}>
-              <PlayerRow name={p.displayName} uri={p.avatarUrl} level={p.level} onPress={() => router.push(`/player/${p.id}`)} />
-            </View>
-          ))}
+        <View style={{ paddingHorizontal: t.layout.gutter }} accessibilityLiveRegion="polite">
+          <Group inset={PLAYER_ROW_INSET}>
+            {q.data.map((p) => (
+              <PlayerRow key={p.id} name={p.displayName} uri={p.avatarUrl} level={p.level} onPress={() => router.push(`/player/${p.id}`)} />
+            ))}
+          </Group>
         </View>
       )}
     </Screen>

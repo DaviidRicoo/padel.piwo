@@ -3,8 +3,8 @@ import { SearchX } from 'lucide-react-native';
 import { useState } from 'react';
 import { View } from 'react-native';
 
-import { PlayerRow } from '@/components/app';
-import { AppText, Button, EmptyState, ErrorState, LoadingCards, Screen, TextField } from '@/components/ui';
+import { PLAYER_ROW_INSET, PlayerRow } from '@/components/app';
+import { AppText, Button, EmptyState, ErrorState, Group, LoadingCards, Screen, TextField } from '@/components/ui';
 import { useApi, useQuery } from '@/data/provider';
 import { livePairOf } from '@/data/rules';
 import { useAction } from '@/data/useAction';
@@ -58,12 +58,13 @@ export default function RegisterPair() {
       ) : q.data.players.length === 0 ? (
         <EmptyState icon={SearchX} title={tr('search.emptyTitle')} body={tr('search.emptyBody')} />
       ) : (
-        <View accessibilityRole="radiogroup" accessibilityLabel={tr('register.search')} style={{ borderTopWidth: 1, borderColor: t.color.border }}>
+        <View accessibilityRole="radiogroup" accessibilityLabel={tr('register.search')} style={{ paddingHorizontal: t.layout.gutter }}>
+          <Group inset={PLAYER_ROW_INSET}>
           {q.data.players.map((p) => {
             const taken = !!livePairOf(q.data!.tour, p.id);
             return (
-              <View key={p.id} style={{ borderBottomWidth: 1, borderColor: t.color.border }}>
                 <PlayerRow
+                  key={p.id}
                   name={p.displayName}
                   uri={p.avatarUrl}
                   level={p.level}
@@ -73,9 +74,9 @@ export default function RegisterPair() {
                   disabledLabel={tr('register.unavailable')}
                   onPress={() => setPartnerId(p.id)}
                 />
-              </View>
             );
           })}
+          </Group>
         </View>
       )}
     </Screen>

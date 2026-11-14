@@ -92,3 +92,14 @@ Not built (not requested for this batch):
 - **Every screen in the inventory now exists.** S04 is still a placeholder.
 - **`/replica-backend`:** this is what turns the `partial` rows into `yes`.
 - **Small items before or after it:** the S04 questionnaire, declining a join request, rescheduling a tournament match.
+
+## Design refresh (2026-11-14, branch `design/refresh`)
+
+Visual pass over every screen with the awesome-design-md `apple` style as the reference, the taste-skill rules that fit an app (press feedback, one system, no emoji or drawn icons, tap sizes), the Vercel web-interface-guidelines as the review list, and playwright-cli for before and after screenshots of all 17 screens in both themes. image-to-code was not used as written: it starts by generating mock-up images, which this setup cannot do; only its checklist (no cards in cards, fewer small pills) was applied.
+
+- **Tokens** (`replica/design/tokens.json`): light is white cards on a cool grey, dark is navy cards on a deeper navy. Cards have no border or shadow; the surface change is the edge. New `-soft` tints for badges and level chips (soft background, strong text) instead of solid fills, and a fixed `brand` navy. 80 contrast pairs, 0 failing AA.
+- **Type:** Inter on every screen with tight tracking on headings; Montserrat kept for the `brand` variant only. Section titles one step larger than card titles.
+- **Components:** pill buttons that shrink slightly on press; grouped lists (`Group`) with inset hairlines for settings, ranking, search, partner picker and notifications; icon tiles in list rows; match and tournament cards with a hairline footer for level, free spots and progress; one stats strip (`ProfileHeader`) on S11 and S13 instead of three boxes.
+- **Screens:** large titles on the tabs on the page's own background; welcome always on the brand navy so the logo has no visible box; the design-system link in Settings only in development builds; notices as soft tints instead of outlined boxes.
+- **Forms:** fields on the card surface; no autocorrect or spellcheck on email, password and code fields.
+- **Checked:** typecheck, lint, both click-throughs (17 steps, 0 console errors). The two checks for the "Estadísticas" heading now look for the stats strip, which is labelled "Estadísticas" for screen readers.

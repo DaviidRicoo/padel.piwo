@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 
 import { RankingHeader, RankingRow } from '@/components/app';
-import { AppText, EmptyState, ErrorState, LoadingCards, Screen, SegmentedControl } from '@/components/ui';
+import { AppText, EmptyState, ErrorState, Group, LoadingCards, Screen, SegmentedControl } from '@/components/ui';
 import { useApi, useQuery, useUserId } from '@/data/provider';
 import { useI18n } from '@/i18n';
 import { seasonStart } from '@/lib/time';
@@ -59,8 +59,8 @@ export default function RankingScreen() {
   }
 
   return (
-    <Screen flush onRefresh={q.refetch} footer={footer}>
-      <View style={{ paddingHorizontal: t.layout.gutter }}>
+    <Screen onRefresh={q.refetch} footer={footer}>
+      <View>
         <SegmentedControl
           accessibilityLabel={tr('ranking.period')}
           value={period}
@@ -72,20 +72,21 @@ export default function RankingScreen() {
         />
       </View>
       {q.loading ? (
-        <View style={{ paddingHorizontal: t.layout.gutter }}>
-          <LoadingCards count={4} />
-        </View>
+        <LoadingCards count={4} />
       ) : q.error ? (
         <ErrorState onRetry={q.refetch} />
       ) : rows.length === 0 ? (
         <EmptyState icon={Medal} title={tr('ranking.emptyTitle')} body={tr('ranking.emptyBody')} />
       ) : (
-        <View>
+        <View style={{ gap: t.space[1] }}>
           <RankingHeader columns={columns} />
-          {rows.map((r, i) => (
-            <RankingRow key={r.playerId} {...rowProps(i)} />
-          ))}
-          <AppText variant="caption" tone="textMuted" style={{ padding: t.layout.gutter }}>
+          {/* hairlines start under the avatar: row padding + position column + gap */}
+          <Group inset={t.space[3] + 28 + t.space[2]}>
+            {rows.map((r, i) => (
+              <RankingRow key={r.playerId} {...rowProps(i)} />
+            ))}
+          </Group>
+          <AppText variant="caption" tone="textMuted" style={{ paddingHorizontal: t.space[4], paddingTop: t.space[2] }}>
             {tr('ranking.legend')}
           </AppText>
         </View>

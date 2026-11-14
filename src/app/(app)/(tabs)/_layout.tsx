@@ -17,8 +17,15 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerStyle: { backgroundColor: t.color.surface },
-        headerTitleStyle: { fontFamily: t.type.title.fontFamily, fontSize: t.type.title.fontSize, color: t.color.text },
+        // a large title on the page's own background, no band of another colour
+        headerStyle: { backgroundColor: t.color.bg, height: 64 + insets.top },
+        headerTitleStyle: {
+          fontFamily: t.type.display.fontFamily,
+          fontSize: 28,
+          lineHeight: 34,
+          letterSpacing: t.type.display.letterSpacing,
+          color: t.color.text,
+        },
         headerTitleAlign: 'left',
         headerShadowVisible: false,
         tabBarActiveTintColor: t.color.accentText,
@@ -27,6 +34,7 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: t.color.surface,
           borderTopColor: t.color.border,
+          borderTopWidth: 1,
           height: t.layout.tabBar + insets.bottom,
           paddingTop: t.space[1],
           paddingBottom: insets.bottom + t.space[1],
@@ -74,7 +82,7 @@ function HomeHeaderActions() {
               borderRadius: 5,
               backgroundColor: t.color.gold,
               borderWidth: 2,
-              borderColor: t.color.surface,
+              borderColor: t.color.bg,
             }}
           />
         ) : null}

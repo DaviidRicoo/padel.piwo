@@ -11,19 +11,24 @@ export interface CardProps {
   /** required when pressable: one sentence that sums up the card */
   accessibilityLabel?: string;
   padding?: number;
+  /** a highlighted card (an invitation waiting for an answer): an accent outline */
+  highlight?: boolean;
   style?: StyleProp<ViewStyle>;
 }
 
-export function Card({ children, onPress, accessibilityLabel, padding, style }: CardProps) {
+/**
+ * A surface on the page background. No border and no shadow: the change of
+ * surface is the edge (light: white on a cool grey; dark: navy on deep navy).
+ */
+export function Card({ children, onPress, accessibilityLabel, padding, highlight, style }: CardProps) {
   const t = useTheme();
   const focus = useFocusRing();
   const base: ViewStyle = {
     backgroundColor: t.color.surface,
     borderRadius: t.radius.lg,
-    borderWidth: 1,
-    borderColor: t.color.border,
     padding: padding ?? t.space[4],
-    ...t.shadow('card'),
+    borderWidth: highlight ? 1.5 : 0,
+    borderColor: highlight ? t.color.accent : undefined,
   };
   if (!onPress) return <View style={[base, style]}>{children}</View>;
   return (
@@ -32,8 +37,32 @@ export function Card({ children, onPress, accessibilityLabel, padding, style }: 
       accessibilityLabel={accessibilityLabel}
       onPress={onPress}
       {...focus.handlers}
-      style={({ pressed }) => [base, pressed ? { backgroundColor: t.color.surface2 } : null, focus.ring, style]}>
+      style={({ pressed }) => [
+        base,
+        pressed ? { backgroundColor: t.color.surface2, transform: [{ scale: 0.99 }] } : null,
+        focus.ring,
+        style,
+      ]}>
       {children}
     </Pressable>
+  );
+}
+
+/**
+ * Rows grouped in one rounded surface, split by inset hairlines (settings,
+ * lists of players or pairs). Children are rendered in order; falsy ones are skipped.
+ */
+export function Group({ children, inset = 0 }: { children: ReactNode; inset?: number }) {
+  const t = useTheme();
+  const rows = (Array.isArray(children) ? children.flat() : [children]).filter(Boolean);
+  return (
+    <View style={{ backgroundColor: t.color.surface, borderRadius: t.radius.lg, overflow: 'hidden' }}>
+      {rows.map((row, i) => (
+        <View key={i}>
+          {i > 0 ? <View style={{ height: 1, marginLeft: inset, backgroundColor: t.color.border }} /> : null}
+          {row}
+        </View>
+      ))}
+    </View>
   );
 }

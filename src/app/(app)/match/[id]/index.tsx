@@ -168,7 +168,7 @@ function Header({ m, people }: { m: Match; people: People }) {
       </AppText>
       <AppText tone="textMuted">{`${m.place} · ${tr('common.minutes', { n: m.durationMinutes })} · ${tr('matchDetail.host', { name: nameOf(people, m.hostId) })}`}</AppText>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: t.space[2] }}>
-        <Badge label={m.type === 'competitive' ? tr('match.typeCompetitive') : tr('match.typeFriendly')} tone={m.type === 'competitive' ? 'accent' : 'neutral'} />
+        <Badge label={m.type === 'competitive' ? tr('match.typeCompetitive') : tr('match.typeFriendly')} tone={m.type === 'competitive' ? 'gold' : 'neutral'} />
         {fullRange ? null : <LevelChip range={[m.levelMin, m.levelMax]} size="sm" locale={i18n.intlLocale} prefix={tr('common.level')} />}
       </View>
       {m.tournamentId ? (
@@ -204,7 +204,7 @@ function Notice({ text }: { text: string }) {
   return (
     <View
       accessibilityLiveRegion="polite"
-      style={{ flexDirection: 'row', gap: t.space[2], padding: t.space[3], borderRadius: t.radius.md, borderWidth: 1, borderColor: t.color.warning, backgroundColor: t.color.surface }}>
+      style={{ flexDirection: 'row', gap: t.space[2], padding: t.space[3], borderRadius: t.radius.md, backgroundColor: t.color.warningSoft }}>
       <CircleAlert color={t.color.warning} size={20} />
       <AppText variant="bodySm" style={{ flex: 1 }}>
         {text}

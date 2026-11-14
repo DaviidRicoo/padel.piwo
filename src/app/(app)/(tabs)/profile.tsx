@@ -2,8 +2,8 @@ import { router } from 'expo-router';
 import { Pencil, Settings } from 'lucide-react-native';
 import { View } from 'react-native';
 
-import { MatchCard } from '@/components/app';
-import { AppText, Avatar, Button, Card, ErrorState, LevelChip, LoadingCards, Screen } from '@/components/ui';
+import { MatchCard, ProfileHeader } from '@/components/app';
+import { AppText, Button, ErrorState, LoadingCards, Screen } from '@/components/ui';
 import { useApi, useQuery, useUserId } from '@/data/provider';
 import { loadPeople, toMatchCard } from '@/features/matches';
 import { profileSubtitle } from '@/features/players';
@@ -47,37 +47,19 @@ export default function ProfileScreen() {
 
   return (
     <Screen onRefresh={q.refetch}>
-      <View style={{ alignItems: 'center', gap: t.space[2] }}>
-        <Avatar name={profile.displayName} uri={profile.avatarUrl} size={88} />
-        <AppText variant="title" align="center">
-          {profile.displayName}
-        </AppText>
-        <LevelChip value={profile.level} locale={i18n.intlLocale} prefix={tr('common.level')} centered />
-        {profileSubtitle(profile, i18n) ? (
-          <AppText variant="bodySm" tone="textMuted" align="center">
-            {profileSubtitle(profile, i18n)}
-          </AppText>
-        ) : null}
-      </View>
-      <View style={{ flexDirection: 'row', gap: t.space[2], justifyContent: 'center' }}>
-        <Button label={tr('profile.edit')} icon={Pencil} variant="secondary" size="sm" onPress={() => router.push('/profile-edit')} />
-        <Button label={tr('profile.settings')} icon={Settings} variant="secondary" size="sm" onPress={() => router.push('/settings')} />
-      </View>
-
-      <SectionTitle>{tr('profile.stats')}</SectionTitle>
+      <ProfileHeader
+        name={profile.displayName}
+        uri={profile.avatarUrl}
+        level={profile.level}
+        levelPrefix={tr('common.level')}
+        locale={i18n.intlLocale}
+        subtitle={profileSubtitle(profile, i18n)}
+        stats={numbers}
+        statsLabel={tr('profile.stats')}
+      />
       <View style={{ flexDirection: 'row', gap: t.space[2] }}>
-        {numbers.map((n) => (
-          <Card key={n.label} style={{ flex: 1 }} padding={t.space[3]}>
-            <View accessible accessibilityLabel={`${n.label}: ${n.value}`} style={{ alignItems: 'center', gap: 2 }}>
-              <AppText variant="title" numeric accessibilityRole="none">
-                {n.value}
-              </AppText>
-              <AppText variant="caption" tone="textMuted">
-                {n.label}
-              </AppText>
-            </View>
-          </Card>
-        ))}
+        <Button label={tr('profile.edit')} icon={Pencil} variant="secondary" style={{ flex: 1 }} onPress={() => router.push('/profile-edit')} />
+        <Button label={tr('profile.settings')} icon={Settings} variant="secondary" style={{ flex: 1 }} onPress={() => router.push('/settings')} />
       </View>
 
       <SectionTitle action={latest.length ? <Button label={tr('profile.seeAll')} variant="ghost" size="sm" onPress={() => router.navigate('/recent')} /> : undefined}>

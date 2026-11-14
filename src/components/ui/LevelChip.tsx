@@ -32,11 +32,11 @@ export function LevelChip({ value, range, size = 'md', locale = 'es-ES', prefix 
       style={{
         alignSelf: centered ? 'center' : 'flex-start',
         paddingHorizontal: size === 'sm' ? t.space[2] : t.space[3],
-        paddingVertical: size === 'sm' ? 2 : t.space[1],
-        borderRadius: t.radius.pill,
-        backgroundColor: t.color.sage,
+        paddingVertical: size === 'sm' ? 3 : t.space[1],
+        borderRadius: size === 'sm' ? 6 : t.radius.pill,
+        backgroundColor: t.color.sageSoft,
       }}>
-      <AppText variant={size === 'sm' ? 'caption' : 'label'} tone="onSage" numeric>
+      <AppText variant={size === 'sm' ? 'caption' : 'label'} tone="sageText" numeric style={size === 'sm' ? { fontFamily: t.type.label.fontFamily } : null}>
         {text}
       </AppText>
     </View>

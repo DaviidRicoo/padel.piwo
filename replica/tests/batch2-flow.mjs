@@ -148,7 +148,7 @@ try {
     await shot('S16');
     await click('Eva Nowak');
     await waitText('Partidos recientes');
-    await waitText('Estadísticas');
+    await waitText('Victorias'); // the stats strip (played, won, win rate)
     await shot('S13');
   });
 

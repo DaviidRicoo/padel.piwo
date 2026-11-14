@@ -30,9 +30,7 @@ export function SegmentedControl<T extends string>({ options, value, onChange, a
         padding: t.space[1],
         gap: t.space[1],
         borderRadius: t.radius.pill,
-        backgroundColor: t.color.surface,
-        borderWidth: 1,
-        borderColor: t.color.border,
+        backgroundColor: t.color.surface2,
         opacity: disabled ? t.opacity.disabled : 1,
       }}>
       {options.map((o) => (
@@ -62,7 +60,7 @@ function Segment({ label, selected, disabled, onPress }: { label: string; select
           alignItems: 'center',
           justifyContent: 'center',
           borderRadius: t.radius.pill,
-          backgroundColor: selected ? t.color.accent : pressed ? t.color.surface2 : 'transparent',
+          backgroundColor: selected ? t.color.accent : pressed ? t.color.border : 'transparent',
         },
         focus.ring,
       ]}>

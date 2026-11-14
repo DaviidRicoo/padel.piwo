@@ -1,12 +1,12 @@
 import { Pressable, View, type ViewStyle } from 'react-native';
 
-import { AppText, Avatar, Badge, LevelChip } from '@/components/ui';
+import { AppText, Avatar, LevelChip } from '@/components/ui';
 import { useFocusRing } from '@/components/ui/focus';
 import { useTheme } from '@/theme';
 
 // counts are at most 3 digits; the win rate needs room for "100 %" on one line
-const COUNT_WIDTH = 32;
-const RATE_WIDTH = 56;
+const COUNT_WIDTH = 28;
+const RATE_WIDTH = 52;
 const WIDTHS = [COUNT_WIDTH, COUNT_WIDTH, RATE_WIDTH];
 
 export interface RankingColumns {
@@ -23,7 +23,7 @@ export function RankingHeader({ columns }: { columns: RankingColumns }) {
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
       // same gap and widths as the rows, so the titles sit above their numbers
-      style={{ flexDirection: 'row', alignItems: 'center', gap: t.space[3], paddingHorizontal: t.space[4], paddingVertical: t.space[2] }}>
+      style={{ flexDirection: 'row', alignItems: 'center', gap: t.space[2], paddingHorizontal: t.space[3], paddingVertical: t.space[2] }}>
       <View style={{ flex: 1 }} />
       {[columns.played, columns.won, columns.winRate].map((c, i) => (
         <AppText key={c} variant="caption" tone="textMuted" align="right" style={{ width: WIDTHS[i] }}>
@@ -60,17 +60,21 @@ export function RankingRow({ position, name, uri, level, played, won, winRate, m
   const row: ViewStyle = {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: t.space[3],
-    paddingHorizontal: t.space[4],
+    gap: t.space[2],
+    paddingHorizontal: t.space[3],
     paddingVertical: t.space[3],
     backgroundColor: me ? t.color.surface2 : t.color.surface,
   };
   const content = (
     <>
-      <View style={{ width: 32, alignItems: 'center' }}>
-        {/* top three get a filled gold badge, never gold text, so contrast holds on any row */}
+      <View style={{ width: 28, alignItems: 'center' }}>
+        {/* top three: the number on a soft gold disc (gold text on gold-soft is a checked pair) */}
         {position <= 3 ? (
-          <Badge label={String(position)} tone="gold" />
+          <View style={{ width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: t.color.goldSoft }}>
+            <AppText variant="label" tone="goldText" numeric>
+              {position}
+            </AppText>
+          </View>
         ) : (
           <AppText variant="label" tone="textMuted" numeric>
             {position}

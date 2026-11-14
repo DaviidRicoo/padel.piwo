@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { Bell, CheckCheck } from 'lucide-react-native';
 import { Pressable, View } from 'react-native';
 
-import { AppText, Avatar, Button, EmptyState, ErrorState, LoadingCards, Screen } from '@/components/ui';
+import { AppText, Avatar, Button, EmptyState, ErrorState, Group, LoadingCards, Screen } from '@/components/ui';
 import { useFocusRing } from '@/components/ui/focus';
 import { useApi, useQuery } from '@/data/provider';
 import type { AppNotification } from '@/data/types';
@@ -44,10 +44,12 @@ export default function Notifications() {
               <Button label={tr('notifications.markRead')} icon={CheckCheck} variant="ghost" size="sm" loading={busy === 'read'} onPress={() => run('read', () => api.markNotificationsRead())} />
             </View>
           ) : null}
-          <View style={{ borderTopWidth: 1, borderColor: t.color.border }}>
-            {q.data.items.map((n) => (
-              <Item key={n.id} n={n} actor={n.actorId ? q.data!.people[n.actorId] : undefined} />
-            ))}
+          <View style={{ paddingHorizontal: t.layout.gutter }}>
+            <Group inset={t.space[4] + 40 + t.space[3]}>
+              {q.data.items.map((n) => (
+                <Item key={n.id} n={n} actor={n.actorId ? q.data!.people[n.actorId] : undefined} />
+              ))}
+            </Group>
           </View>
         </>
       )}
@@ -77,13 +79,18 @@ function Item({ n, actor }: { n: AppNotification; actor?: string }) {
           flexDirection: 'row',
           gap: t.space[3],
           padding: t.space[4],
-          borderBottomWidth: 1,
-          borderColor: t.color.border,
-          backgroundColor: pressed ? t.color.surface2 : unread ? t.color.surface : t.color.bg,
+          backgroundColor: pressed ? t.color.surface2 : t.color.surface,
         },
         focus.ring,
       ]}>
-      {actor ? <Avatar name={actor} size={40} /> : <Bell color={t.color.textMuted} size={24} />}
+      {actor ? (
+        <Avatar name={actor} size={40} />
+      ) : (
+        // the same 40 px column as an avatar, so every line of text starts in one place
+        <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: t.color.goldSoft }}>
+          <Bell color={t.color.goldText} size={20} />
+        </View>
+      )}
       <View style={{ flex: 1, gap: 2 }}>
         <AppText variant={unread ? 'label' : 'bodySm'}>{text}</AppText>
         <AppText variant="caption" tone="textMuted">

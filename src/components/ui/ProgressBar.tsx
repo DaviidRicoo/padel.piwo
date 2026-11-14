@@ -18,8 +18,8 @@ export function ProgressBar({ value, max, accessibilityLabel }: ProgressBarProps
       accessibilityRole="progressbar"
       accessibilityLabel={accessibilityLabel}
       accessibilityValue={{ min: 0, max, now: value }}
-      style={{ height: 6, borderRadius: t.radius.pill, backgroundColor: t.color.surface2, overflow: 'hidden' }}>
-      <View style={{ width: `${pct * 100}%`, height: '100%', borderRadius: t.radius.pill, backgroundColor: t.color.accent }} />
+      style={{ height: 4, borderRadius: t.radius.pill, backgroundColor: t.color.surface2, overflow: 'hidden' }}>
+      <View style={{ width: `${pct * 100}%`, height: '100%', borderRadius: t.radius.pill, backgroundColor: t.color.gold }} />
     </View>
   );
 }

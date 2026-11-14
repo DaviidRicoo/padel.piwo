@@ -53,10 +53,13 @@ export function MatchCard({
   const t = useTheme();
   const cancelled = status === 'cancelled';
   const summary = [when, place, typeLabel, resultBadge?.label, sets ? null : statusLabel].filter(Boolean).join(', ');
+  const showLevel = !sets && !resultBadge && status !== 'played' && levelRange;
+  const showStatus = !sets && !resultBadge && status !== 'played';
+  const hasFooter = !!(sets || resultBadge || showLevel || showStatus);
 
   return (
-    <Card onPress={onPress} accessibilityLabel={summary}>
-      <View style={{ gap: t.space[3] }}>
+    <Card onPress={onPress} accessibilityLabel={summary} padding={0}>
+      <View style={{ padding: t.space[4], gap: t.space[4] }}>
         <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: t.space[3] }}>
           <View style={{ flex: 1, gap: 2 }}>
             <AppText variant="heading" tone={cancelled ? 'textMuted' : 'text'} accessibilityRole="none">
@@ -66,49 +69,64 @@ export function MatchCard({
               {duration ? `${place} · ${duration}` : place}
             </AppText>
           </View>
-          <Badge label={typeLabel} tone={competitive ? 'accent' : 'neutral'} />
+          <Badge label={typeLabel} tone={competitive ? 'gold' : 'neutral'} />
         </View>
 
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: t.space[3] }}>
           <Team slots={slots.slice(0, 2)} freeSlotLabel={freeSlotLabel} />
-          <AppText variant="caption" tone="textMuted">
-            vs
+          <AppText variant="caption" tone="textMuted" style={{ fontFamily: t.type.label.fontFamily, letterSpacing: 1 }}>
+            VS
           </AppText>
           <Team slots={slots.slice(2, 4)} freeSlotLabel={freeSlotLabel} />
         </View>
+      </View>
 
-        <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: t.space[2] }}>
+      {hasFooter ? (
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: t.space[2],
+            minHeight: 48,
+            paddingHorizontal: t.space[4],
+            paddingVertical: t.space[2],
+            borderTopWidth: 1,
+            borderTopColor: t.color.border,
+          }}>
           {sets ? <ScoreLine sets={sets} /> : null}
           {resultBadge ? <Badge label={resultBadge.label} tone={resultBadge.tone} /> : null}
-          {!sets && !resultBadge && status !== 'played' && levelRange ? <LevelChip range={levelRange} size="sm" /> : null}
+          {showLevel ? <LevelChip range={levelRange} size="sm" /> : null}
           <View style={{ flex: 1 }} />
-          {!sets && !resultBadge && status !== 'played' ? (
+          {showStatus ? (
             <AppText variant="label" tone={status === 'open' ? 'accentText' : 'textMuted'}>
               {statusLabel}
             </AppText>
           ) : null}
         </View>
-      </View>
+      ) : null}
     </Card>
   );
 }
 
+const SLOT = 36;
+
 function Team({ slots, freeSlotLabel }: { slots: (SlotPlayer | null)[]; freeSlotLabel: string }) {
   const t = useTheme();
   return (
-    <View style={{ flexDirection: 'row', gap: t.space[1] }}>
+    <View style={{ flexDirection: 'row', gap: t.space[1] + 2 }}>
       {slots.map((p, i) =>
         p ? (
-          <Avatar key={i} name={p.name} uri={p.uri} size={32} me={p.me} />
+          <Avatar key={i} name={p.name} uri={p.uri} size={SLOT} me={p.me} />
         ) : (
           <View
             key={i}
             accessible
             accessibilityLabel={freeSlotLabel}
             style={{
-              width: 32,
-              height: 32,
-              borderRadius: 16,
+              width: SLOT,
+              height: SLOT,
+              borderRadius: SLOT / 2,
               borderWidth: 1.5,
               borderStyle: 'dashed',
               borderColor: t.color.borderInput,
