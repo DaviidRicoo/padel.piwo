@@ -1,4 +1,5 @@
-// Runs replica/schema.sql on an in-memory Postgres (PGlite) and checks the rules.
+// Runs the schema migration (supabase/migrations/20261114000100_schema.sql) on an
+// in-memory Postgres (PGlite) and checks the rules.
 //
 //   PGLITE_ENTRY=/path/to/node_modules/@electric-sql/pglite/dist/index.js \
 //     node replica/tests/schema.test.mjs
@@ -13,7 +14,7 @@ import { pathToFileURL } from 'node:url';
 const entry = process.env.PGLITE_ENTRY;
 if (!entry) { console.error('Set PGLITE_ENTRY to the pglite dist/index.js path'); process.exit(2); }
 const { PGlite } = await import(pathToFileURL(entry).href);
-const schema = readFileSync(new URL('../schema.sql', import.meta.url), 'utf8');
+const schema = readFileSync(new URL('../../supabase/migrations/20261114000100_schema.sql', import.meta.url), 'utf8');
 
 const db = new PGlite();
 // Stand-ins for what Supabase provides: roles, auth.users, auth.uid(), and the
@@ -78,6 +79,9 @@ async function fullMatch(players, { type = 'competitive', start = `now() - inter
   return id;
 }
 const A_WINS = [{ a: 6, b: 3 }, { a: 6, b: 4 }];
+// matches are created only through create_match(); returns the new id
+const createMatch = async (u, place, min = 1, max = 10, start = `now() + interval '1 day'`) =>
+  (await as(u, `select create_match(${start}, 90, $1, 'competitive', $2, $3) as id`, [place, min, max])).rows[0].id;
 const B_WINS = [{ a: 3, b: 6 }, { a: 4, b: 6 }];
 
 const P = [];
@@ -104,12 +108,14 @@ test('clients cannot write match_players or tournament matches directly', async 
   await expectErr(() => as(P[0], `insert into match_players (match_id, player_id, slot) values (gen_random_uuid(), $1, 1)`, [P[0].id]), 'row-level security');
   await expectErr(() => as(P[0], `insert into matches (host_id, starts_at, place, tournament_id)
     values ($1, now() + interval '1 day', 'X1', gen_random_uuid())`, [P[0].id]), 'row-level security');
+  // even a normal match: they are created only through create_match()
+  await expectErr(() => as(P[0], `insert into matches (host_id, starts_at, place)
+    values ($1, now() + interval '1 day', 'X1')`, [P[0].id]), 'row-level security');
   await expectErr(() => as(null, `select join_match(gen_random_uuid())`, [], 'anon'), 'permission denied');
 });
 
 test('creating a match puts the host in slot 1; joins fill slots; a full match is closed', async () => {
-  const m = (await as(P[0], `insert into matches (host_id, starts_at, place, level_min, level_max)
-    values ($1, now() + interval '1 day', 'Court 1', 3, 5) returning id`, [P[0].id])).rows[0].id;
+  const m = await createMatch(P[0], 'Court 1', 3, 5);
   eq(await count(`select 1 from match_players where match_id = $1 and slot = 1 and player_id = $2`, [m, P[0].id]), 1, 'host slot');
   eq((await as(P[1], `select join_match($1) as r`, [m])).rows[0].r, 'joined', 'p1');
   await expectErr(() => as(P[1], `select join_match($1)`, [m]), 'already_joined');
@@ -126,8 +132,7 @@ test('creating a match puts the host in slot 1; joins fill slots; a full match i
 });
 
 test('a player outside the level range asks for a slot and the host accepts', async () => {
-  const m = (await as(P[5], `insert into matches (host_id, starts_at, place, level_min, level_max)
-    values ($1, now() + interval '1 day', 'Court 2', 7, 9) returning id`, [P[5].id])).rows[0].id;
+  const m = await createMatch(P[5], 'Court 2', 7, 9);
   eq((await as(P[6], `select join_match($1) as r`, [m])).rows[0].r, 'requested', 'requested');
   eq(await notifs(P[5], 'join_requested'), 1, 'host notified');
   await expectErr(() => as(P[6], `select accept_request($1, $2)`, [m, P[6].id]), 'not_host');
@@ -203,6 +208,8 @@ test('tournament sizes and registration rules', async () => {
   for (const [players, pairs] of [[8, 4], [16, 8], [32, 16]]) {
     const t = await newTournament(ORG, players);
     eq((await su(`select max_pairs from tournaments where id = $1`, [t])).rows[0].max_pairs, pairs, `${players} players`);
+    // an organizer may only have 2 tournaments taking entries, so clear these test ones
+    await as(ORG, `select cancel_tournament($1)`, [t]);
   }
   T.id = await newTournament(ORG, 8);
   await expectErr(() => as(P[0], `select register_pair($1, $2)`, [T.id, P[0].id]), 'partner_is_self');
@@ -215,7 +222,7 @@ test('tournament sizes and registration rules', async () => {
   // declining frees both players to register again
   const declined = await register(T.id, P[2], P[3]);
   await as(P[3], `select respond_pair_invite($1, false)`, [declined]);
-  eq(await notifs(P[2], 'tournament_pair_accepted'), 1, 'registrant told');
+  eq(await notifs(P[2], 'tournament_pair_declined'), 1, 'registrant told');
   // withdrawing works too
   const again = await register(T.id, P[2], P[3]);
   await as(P[2], `select withdraw_pair($1)`, [again]);
@@ -328,8 +335,8 @@ test('cancelling a tournament: only the organizer, pairs are told, registration 
 });
 
 test('deleting an account anonymises the player and frees future matches', async () => {
-  const hosted = (await as(P[14], `insert into matches (host_id, starts_at, place) values ($1, now() + interval '1 day', 'Court 9') returning id`, [P[14].id])).rows[0].id;
-  const other = (await as(P[15], `insert into matches (host_id, starts_at, place) values ($1, now() + interval '1 day', 'Court 8') returning id`, [P[15].id])).rows[0].id;
+  const hosted = await createMatch(P[14], 'Court 9');
+  const other = await createMatch(P[15], 'Court 8');
   await as(P[14], `select join_match($1)`, [other]);
   await as(P[14], `select delete_account()`);
   eq((await su(`select status from matches where id = $1`, [hosted])).rows[0].status, 'cancelled', 'hosted cancelled');
@@ -401,6 +408,72 @@ test('an organizer who deletes their account hands the tournament to a registere
   await as(P[0], `select organizer_set_result($1, $2)`, [other, JSON.stringify(A_WINS)]);
   eq(await count(`select 1 from tournament_ties where tournament_id = $1 and winner_pair_id is not null`, [t2]), 1, 'winner advanced');
   eq((await su(`select is_deleted from profiles where id = $1`, [org2.id])).rows[0].is_deleted, true, 'old organizer anonymised');
+});
+
+
+test('create_match validates every field on the server and caps open matches per host', async () => {
+  const u = await signup('Spammer');
+  const call = (start, dur, place, type, min, max) => as(u, `select create_match(${start}, $1, $2, $3, $4, $5)`, [dur, place, type, min, max]);
+  await expectErr(() => call(`now() - interval '1 hour'`, 90, 'Court 1', 'competitive', 1, 10), 'starts_in_past');
+  await expectErr(() => call(`now() + interval '1 day'`, 90, ' ', 'competitive', 1, 10), 'invalid_place');
+  await expectErr(() => call(`now() + interval '1 day'`, 20, 'Court 1', 'competitive', 1, 10), 'invalid_duration');
+  await expectErr(() => call(`now() + interval '1 day'`, 90, 'Court 1', 'competitive', 6, 4), 'invalid_level_range');
+  for (let i = 0; i < 5; i++) await createMatch(u, `Court ${i + 1}`);
+  await expectErr(() => createMatch(u, 'Court 6'), 'too_many_open');
+});
+
+test('create_tournament validates and caps tournaments taking entries per organizer', async () => {
+  const u = await signup('Organizer cap');
+  const make = (name) => as(u, `select create_tournament($1, '', 'Court 1', now() + interval '3 days', 8, 7)`, [name]);
+  await expectErr(() => make('x'), 'invalid_name');
+  await make('Cup one');
+  await make('Cup two');
+  await expectErr(() => make('Cup three'), 'too_many_open');
+});
+
+test('notifications say what they are about and who caused them', async () => {
+  const host = await signup('Host N');
+  const guest = await signup('Guest N');
+  const m = await createMatch(host, 'Court 4');
+  await as(guest, `select join_match($1)`, [m]);
+  const n = (await su(`select match_id, tournament_id, actor_id from notifications where player_id = $1 and type = 'player_joined'`, [host.id])).rows[0];
+  eq(n.match_id, m, 'match'); eq(n.actor_id, guest.id, 'actor'); eq(n.tournament_id, null, 'no tournament');
+  const t = (await as(host, `select create_tournament('Note Cup', '', 'Court 1', now() + interval '3 days', 8, 7) as id`)).rows[0].id;
+  await as(host, `select register_pair($1, $2)`, [t, guest.id]);
+  const inv = (await su(`select tournament_id, actor_id from notifications where player_id = $1 and type = 'tournament_pair_invite'`, [guest.id])).rows[0];
+  eq(inv.tournament_id, t, 'tournament'); eq(inv.actor_id, host.id, 'inviter');
+});
+
+test('a second user gets nothing back: notifications and push tokens are private', async () => {
+  const a = await signup('Private A');
+  const b = await signup('Private B');
+  const m = await createMatch(a, 'Court 5');
+  await as(b, `select join_match($1)`, [m]); // gives A a notification
+  eq((await as(a, `select count(*)::int c from notifications`)).rows[0].c >= 1, true, 'A sees hers');
+  eq((await as(b, `select count(*)::int c from notifications where player_id = $1`, [a.id])).rows[0].c, 0, 'B sees none of A');
+  const upd = await as(b, `update notifications set read_at = now() where player_id = $1`, [a.id]);
+  eq(upd.affectedRows ?? 0, 0, 'B cannot mark A read');
+  await as(a, `insert into push_tokens (token, player_id, platform) values ('ExponentPushToken[a]', $1, 'ios')`, [a.id]);
+  eq((await as(b, `select count(*)::int c from push_tokens`)).rows[0].c, 0, 'B sees no tokens');
+  await expectErr(() => as(b, `insert into push_tokens (token, player_id, platform) values ('ExponentPushToken[b]', $1, 'ios')`, [a.id]), 'row-level security');
+  await expectErr(() => as(b, `update notifications set pushed_at = now() where player_id = $1`, [b.id]), 'permission denied');
+});
+
+test('claim_pushes hands each notification out once, with locale, actor and tokens; members cannot call it', async () => {
+  // earlier tests left unsent notifications; claim them first so this test starts clean
+  await su(`select count(*) from claim_pushes(100000)`);
+  const a = await signup('Push A', 'en');
+  const b = await signup('Push B');
+  await as(a, `insert into push_tokens (token, player_id, platform) values ('ExponentPushToken[push-a]', $1, 'android')`, [a.id]);
+  const m = await createMatch(a, 'Court 7');
+  await as(b, `select join_match($1)`, [m]);
+  const first = (await su(`select * from claim_pushes(50)`)).rows;
+  const mine = first.find((r) => r.player_id === a.id);
+  assert(mine, 'A has a push to send');
+  eq(mine.type, 'player_joined', 'type'); eq(mine.locale, 'en', 'locale'); eq(mine.actor_name, 'Push B', 'actor name');
+  eq(mine.tokens.join(','), 'ExponentPushToken[push-a]', 'tokens');
+  eq((await su(`select count(*)::int c from claim_pushes(50)`)).rows[0].c, 0, 'nothing twice');
+  await expectErr(() => as(a, `select * from claim_pushes(10)`), 'permission denied');
 });
 
 // ---------------------------------------------------------------- run
