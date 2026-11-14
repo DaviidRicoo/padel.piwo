@@ -125,6 +125,18 @@ try {
   await send('Emulation.setDeviceMetricsOverride', { width: W, height: H, deviceScaleFactor: 1, mobile: true });
   await send('Page.navigate', { url: BASE + '/' });
 
+  // real backend: no demo session, so sign in through the UI first (LOGIN_EMAIL / LOGIN_PASSWORD)
+  if (process.env.LOGIN_EMAIL) {
+    await step('sign in as ' + process.env.LOGIN_EMAIL, async () => {
+      await waitText('Ya tengo cuenta', 90000);
+      await click('Ya tengo cuenta');
+      await typeInto('Correo', process.env.LOGIN_EMAIL);
+      await typeInto('Contraseña', process.env.LOGIN_PASSWORD ?? '');
+      await click('Entrar', 'last');
+      await waitText('Partidos abiertos', 30000);
+    });
+  }
+
   await step('S05 lists my upcoming and the open matches', async () => {
     await waitText('Partidos abiertos', 60000);
     await waitText('Mis próximos partidos');
@@ -158,7 +170,7 @@ try {
     await typeInto('Lugar', 'Pista 3');
     await shot('S06');
     await click('Publicar partido');
-    await waitText('Organiza Ana García');
+    await waitText('Organiza Ana');
     await waitText('Pista 3');
     await shot('S07-new-match');
   });
