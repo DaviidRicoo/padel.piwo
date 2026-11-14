@@ -37,7 +37,7 @@ export function PlayerSlot({
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`${joinLabel}, ${teamLabel}`}
-        accessibilityState={{ disabled: !onJoin }}
+        aria-disabled={!onJoin}
         disabled={!onJoin}
         onPress={onJoin}
         {...focus.handlers}

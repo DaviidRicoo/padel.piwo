@@ -52,7 +52,9 @@ export function MatchCard({
 }: MatchCardProps) {
   const t = useTheme();
   const cancelled = status === 'cancelled';
-  const summary = [when, place, typeLabel, resultBadge?.label, sets ? null : statusLabel].filter(Boolean).join(', ');
+  // what a screen reader says for the whole card: the score too, and each status once (BUG-004)
+  const score = sets?.map((s) => `${s.a}-${s.b}`).join(' ');
+  const summary = [...new Set([when, place, typeLabel, score, resultBadge?.label, sets ? null : statusLabel].filter(Boolean))].join(', ');
   const showLevel = !sets && !resultBadge && status !== 'played' && levelRange;
   const showStatus = !sets && !resultBadge && status !== 'played';
   const hasFooter = !!(sets || resultBadge || showLevel || showStatus);

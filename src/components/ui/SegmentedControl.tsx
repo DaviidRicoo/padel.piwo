@@ -47,7 +47,8 @@ function Segment({ label, selected, disabled, onPress }: { label: string; select
     <Pressable
       accessibilityRole="radio"
       accessibilityLabel={label}
-      accessibilityState={{ checked: selected, disabled: !!disabled }}
+      aria-checked={selected}
+      aria-disabled={!!disabled}
       disabled={disabled}
       onPress={onPress}
       hitSlop={4}

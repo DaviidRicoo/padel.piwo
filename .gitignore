@@ -42,6 +42,12 @@ example
 /ios
 /android
 
+# Playwright output (screenshots, traces, the HTML report)
+/e2e/results
+/e2e/report
+/test-results
+/.playwright-cli
+
 # Claude Code local settings (per machine)
 .claude/settings.local.json
 

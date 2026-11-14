@@ -17,6 +17,8 @@ export const es = {
   'common.tomorrow': 'Mañana',
   'common.minutes': '{n} min',
   'common.and': '{a} y {b}',
+  'common.decrease': 'Bajar',
+  'common.increase': 'Subir',
 
   'tabs.matches': 'Partidos',
   'tabs.recent': 'Recientes',

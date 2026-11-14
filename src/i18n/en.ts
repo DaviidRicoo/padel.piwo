@@ -17,6 +17,8 @@ export const en: Record<MessageKey, string> = {
   'common.tomorrow': 'Tomorrow',
   'common.minutes': '{n} min',
   'common.and': '{a} and {b}',
+  'common.decrease': 'Lower',
+  'common.increase': 'Raise',
 
   'tabs.matches': 'Matches',
   'tabs.recent': 'Recent',

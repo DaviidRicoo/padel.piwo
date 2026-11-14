@@ -33,7 +33,8 @@ export function ListItem({ title, subtitle, icon: Icon, trailing = { kind: 'chev
     <Pressable
       accessibilityRole={isSwitch ? 'switch' : 'button'}
       accessibilityLabel={subtitle ? `${title}, ${subtitle}` : title}
-      accessibilityState={{ disabled: !!disabled, checked: isSwitch ? trailing.value : undefined }}
+      aria-disabled={!!disabled}
+      aria-checked={isSwitch ? trailing.value : undefined}
       disabled={disabled}
       onPress={onPress}
       {...focus.handlers}

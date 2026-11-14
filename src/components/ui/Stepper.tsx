@@ -1,6 +1,7 @@
 import { Minus, Plus } from 'lucide-react-native';
-import { Pressable, View } from 'react-native';
+import { Platform, Pressable, View } from 'react-native';
 
+import { useI18n } from '@/i18n';
 import { useTheme } from '@/theme';
 
 import { AppText } from './AppText';
@@ -19,16 +20,27 @@ export interface StepperProps {
   error?: boolean;
 }
 
-/** A number with − and + buttons. Screen readers get one "adjustable" element. */
+const WEB = Platform.OS === 'web';
+
+/**
+ * A number with − and + buttons. On a phone, screen readers get one "adjustable"
+ * element (swipe up or down). On the web there is no such gesture, so the two buttons
+ * are the controls: each is labelled, and the box is a named group (BUG-002).
+ */
 export function Stepper({ label, value, onChange, min, max, step = 1, format = String, error }: StepperProps) {
   const t = useTheme();
+  const { t: tr } = useI18n();
   const set = (v: number) => onChange(Math.min(max, Math.max(min, Math.round(v / step) * step)));
   return (
     <View
-      accessible
-      accessibilityRole="adjustable"
+      accessible={!WEB}
+      accessibilityRole={WEB ? undefined : 'adjustable'}
+      role={WEB ? 'group' : undefined}
       accessibilityLabel={label}
-      accessibilityValue={{ min, max, now: value, text: format(value) }}
+      aria-valuemin={WEB ? undefined : min}
+      aria-valuemax={WEB ? undefined : max}
+      aria-valuenow={WEB ? undefined : value}
+      aria-valuetext={WEB ? undefined : format(value)}
       accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
       onAccessibilityAction={(e) => set(value + (e.nativeEvent.actionName === 'increment' ? step : -step))}
       style={{
@@ -42,24 +54,27 @@ export function Stepper({ label, value, onChange, min, max, step = 1, format = S
         backgroundColor: t.color.bg,
         padding: 2,
       }}>
-      <StepButton icon="minus" disabled={value <= min} onPress={() => set(value - step)} />
-      <AppText variant="title" numeric accessibilityRole="none">
+      <StepButton icon="minus" label={`${tr('common.decrease')}: ${label}`} disabled={value <= min} onPress={() => set(value - step)} />
+      <AppText variant="title" numeric accessibilityRole="none" aria-live={WEB ? 'polite' : undefined}>
         {format(value)}
       </AppText>
-      <StepButton icon="plus" disabled={value >= max} onPress={() => set(value + step)} />
+      <StepButton icon="plus" label={`${tr('common.increase')}: ${label}`} disabled={value >= max} onPress={() => set(value + step)} />
     </View>
   );
 }
 
-function StepButton({ icon, disabled, onPress }: { icon: 'minus' | 'plus'; disabled: boolean; onPress: () => void }) {
+function StepButton({ icon, label, disabled, onPress }: { icon: 'minus' | 'plus'; label: string; disabled: boolean; onPress: () => void }) {
   const t = useTheme();
   const focus = useFocusRing();
   const Icon = icon === 'minus' ? Minus : Plus;
   return (
     <Pressable
-      // the parent "adjustable" element is what screen readers use
-      accessible={false}
-      importantForAccessibility="no"
+      // on a phone the parent "adjustable" element is what screen readers use; on the web, these buttons
+      accessible={WEB}
+      importantForAccessibility={WEB ? undefined : 'no'}
+      accessibilityRole={WEB ? 'button' : undefined}
+      accessibilityLabel={WEB ? label : undefined}
+      aria-disabled={WEB ? disabled : undefined}
       disabled={disabled}
       onPress={onPress}
       {...focus.handlers}

@@ -50,7 +50,8 @@ export function Button({
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
-      accessibilityState={{ disabled: !!inactive, busy: loading }}
+      aria-disabled={!!inactive}
+      aria-busy={!!loading}
       disabled={inactive}
       hitSlop={size === 'sm' ? (t.layout.touchMin - height) / 2 : undefined}
       {...focus.handlers}

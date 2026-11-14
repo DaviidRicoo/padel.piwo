@@ -28,7 +28,8 @@ export function PlayerRow({ name, uri, level, selectable, selected, disabled, di
     <Pressable
       accessibilityRole={selectable ? 'radio' : 'button'}
       accessibilityLabel={[name, disabled ? disabledLabel : null].filter(Boolean).join(', ')}
-      accessibilityState={{ disabled: !!disabled, checked: selectable ? !!selected : undefined }}
+      aria-disabled={!!disabled}
+      aria-checked={selectable ? !!selected : undefined}
       disabled={disabled}
       onPress={onPress}
       {...focus.handlers}

@@ -54,7 +54,9 @@ function ChipButton<T extends string>({ chip, selected, onPress }: { chip: Chip<
     <Pressable
       accessibilityRole="radio"
       accessibilityLabel={chip.sublabel ? `${chip.label}, ${chip.sublabel}` : chip.label}
-      accessibilityState={{ checked: selected, disabled: !!chip.disabled }}
+      // aria-* props, not accessibilityState: react-native-web ignores accessibilityState (BUG-002)
+      aria-checked={selected}
+      aria-disabled={!!chip.disabled}
       disabled={chip.disabled}
       onPress={onPress}
       {...focus.handlers}
