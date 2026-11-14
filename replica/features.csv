@@ -1,52 +1,52 @@
 feature,area,priority,original,clone,notes
-Registro con email y contraseña (abierto),onboarding,must,yes,partial,Registro abierto sin código de invitación. S02; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
-Inicio de sesión y cerrar sesión,onboarding,must,yes,partial,S03 y S14; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
+Registro con email y contraseña (abierto),onboarding,must,yes,partial,"Registro abierto sin código de invitación. S02; Pantalla, reglas y backend Supabase escritos; falta conectar el proyecto y probarlo en real"
+Inicio de sesión y cerrar sesión,onboarding,must,yes,partial,"S03 y S14; Pantalla, reglas y backend Supabase escritos; falta conectar el proyecto y probarlo en real"
 Registro con Google / Apple,onboarding,should,yes,no,Apple obligatorio en iOS si hay login social
-Recuperar contraseña,onboarding,must,yes,partial,Pantalla hecha; no envía correo hasta el backend
+Recuperar contraseña,onboarding,must,yes,partial,Con código de 6 cifras por correo (Gmail SMTP); falta probarlo en real
 Cuestionario inicial para asignar nivel,onboarding,should,yes,no,Versión propia de 5-8 preguntas
-Crear partido (fecha hora duración lugar tipo plazas),matches,must,yes,partial,La duración decide cuándo salta el recordatorio del resultado. S06; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
-Partido amistoso o competitivo,matches,must,yes,partial,Solo el competitivo mueve ranking y nivel. Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
-Rango de nivel permitido en el partido,matches,should,yes,partial,Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
-Lista de partidos abiertos,matches,must,yes,partial,S05; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
-Unirse a un partido con plaza libre,matches,must,yes,partial,S07; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
-Solicitar plaza fuera del rango de nivel,matches,could,yes,partial,El anfitrión acepta o rechaza. Solicitar y aceptar hechos; falta rechazar; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
-Salir de un partido,matches,must,yes,partial,Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
-Cancelar partido (anfitrión),matches,must,yes,partial,Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
-Detalle de partido con jugadores y equipos,matches,must,yes,partial,S07; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
+Crear partido (fecha hora duración lugar tipo plazas),matches,must,yes,partial,"La duración decide cuándo salta el recordatorio del resultado. S06; Pantalla, reglas y backend Supabase escritos; falta conectar el proyecto y probarlo en real"
+Partido amistoso o competitivo,matches,must,yes,partial,"Solo el competitivo mueve ranking y nivel. Pantalla, reglas y backend Supabase escritos; falta conectar el proyecto y probarlo en real"
+Rango de nivel permitido en el partido,matches,should,yes,partial,"Pantalla, reglas y backend Supabase escritos; falta conectar el proyecto y probarlo en real"
+Lista de partidos abiertos,matches,must,yes,partial,"S05; Pantalla, reglas y backend Supabase escritos; falta conectar el proyecto y probarlo en real"
+Unirse a un partido con plaza libre,matches,must,yes,partial,"S07; Pantalla, reglas y backend Supabase escritos; falta conectar el proyecto y probarlo en real"
+Solicitar plaza fuera del rango de nivel,matches,could,yes,partial,"El anfitrión acepta o rechaza. Solicitar y aceptar hechos; falta rechazar; Pantalla, reglas y backend Supabase escritos; falta conectar el proyecto y probarlo en real"
+Salir de un partido,matches,must,yes,partial,"Pantalla, reglas y backend Supabase escritos; falta conectar el proyecto y probarlo en real"
+Cancelar partido (anfitrión),matches,must,yes,partial,"Pantalla, reglas y backend Supabase escritos; falta conectar el proyecto y probarlo en real"
+Detalle de partido con jugadores y equipos,matches,must,yes,partial,"S07; Pantalla, reglas y backend Supabase escritos; falta conectar el proyecto y probarlo en real"
 Invitar a jugadores por enlace,matches,should,yes,no,
-Introducir resultado por sets,results,must,yes,partial,S08; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
-Confirmar o disputar resultado por el rival,results,must,yes,partial,Mejora sobre el original si se hace bien. S07; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
-Recordatorio push al terminar el partido para confirmar el resultado,results,must,no,no,Petición del usuario; no verificado en el original
-El anfitrión confirma el resultado a los 7 días si el rival no lo ha confirmado,results,should,no,partial,Decisión del usuario; no cubre resultados disputados. S07; sin aviso push a los 7 días; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
-Partidos recientes con resultado,results,must,yes,partial,S09; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
-Historial de partidos en el perfil,results,must,yes,partial,"S11 (míos) y S13 (de otros, con su victoria o derrota); Pantalla y reglas hechas sobre datos falsos; falta /replica-backend"
-Ranking general,ranking,must,yes,partial,S10; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
-Estadísticas en ranking: jugados ganados win rate,ranking,must,yes,partial,S10; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
+Introducir resultado por sets,results,must,yes,partial,"S08; Pantalla, reglas y backend Supabase escritos; falta conectar el proyecto y probarlo en real"
+Confirmar o disputar resultado por el rival,results,must,yes,partial,"Mejora sobre el original si se hace bien. S07; Pantalla, reglas y backend Supabase escritos; falta conectar el proyecto y probarlo en real"
+Recordatorio push al terminar el partido para confirmar el resultado,results,must,no,partial,pg_cron + send_result_reminders + Edge Function send-push escritos; SQL probado; falta desplegar y una build con push
+El anfitrión confirma el resultado a los 7 días si el rival no lo ha confirmado,results,should,no,partial,"Decisión del usuario; no cubre resultados disputados. S07; sin aviso push a los 7 días; Pantalla, reglas y backend Supabase escritos; falta conectar el proyecto y probarlo en real"
+Partidos recientes con resultado,results,must,yes,partial,"S09; Pantalla, reglas y backend Supabase escritos; falta conectar el proyecto y probarlo en real"
+Historial de partidos en el perfil,results,must,yes,partial,"S11 (míos) y S13 (de otros, con su victoria o derrota); Pantalla, reglas y backend Supabase escritos; falta conectar el proyecto y probarlo en real"
+Ranking general,ranking,must,yes,partial,"S10; Pantalla, reglas y backend Supabase escritos; falta conectar el proyecto y probarlo en real"
+Estadísticas en ranking: jugados ganados win rate,ranking,must,yes,partial,"S10; Pantalla, reglas y backend Supabase escritos; falta conectar el proyecto y probarlo en real"
 Estadísticas extra: perdidos racha sets,ranking,should,yes,no,
-Filtro de ranking por periodo (temporada / total),ranking,should,yes,partial,Temporada desde el 1 de septiembre; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
+Filtro de ranking por periodo (temporada / total),ranking,should,yes,partial,"Temporada desde el 1 de septiembre; Pantalla, reglas y backend Supabase escritos; falta conectar el proyecto y probarlo en real"
 Ranking entre amigos o seguidos,ranking,could,yes,no,
 Ranking por club,ranking,could,yes,skip,Depende de la red de clubes
 Cálculo de nivel tras partido competitivo,ranking,should,yes,partial,Algoritmo propio tipo Elo; el de Playtomic es propietario. Elo propio en la capa falsa; falta el cuestionario S04
-Ver perfil propio con stats,profile,must,yes,partial,S11; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
-Editar perfil (nombre foto mano posición),profile,must,yes,partial,"S12: nombre, ciudad, mano y lado; falta subir foto (backend); Pantalla y reglas hechas sobre datos falsos; falta /replica-backend"
-Ver perfil de otro jugador,profile,must,yes,partial,"S13, también desde el ranking y la búsqueda; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend"
-Buscar jugadores,social,should,yes,partial,S16; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
+Ver perfil propio con stats,profile,must,yes,partial,"S11; Pantalla, reglas y backend Supabase escritos; falta conectar el proyecto y probarlo en real"
+Editar perfil (nombre foto mano posición),profile,must,yes,partial,"S12: nombre, ciudad, mano y lado; falta subir foto (backend); Pantalla, reglas y backend Supabase escritos; falta conectar el proyecto y probarlo en real"
+Ver perfil de otro jugador,profile,must,yes,partial,"S13, también desde el ranking y la búsqueda; Pantalla, reglas y backend Supabase escritos; falta conectar el proyecto y probarlo en real"
+Buscar jugadores,social,should,yes,partial,"S16; Pantalla, reglas y backend Supabase escritos; falta conectar el proyecto y probarlo en real"
 Seguir jugadores,social,could,yes,no,
-Notificaciones push (invitación resultado plaza),notifications,must,yes,partial,Necesarias para los recordatorios de resultado. Lista en la app (S15); el push real llega con el backend
-Ajustes (idioma notificaciones borrar cuenta),settings,must,yes,partial,"Borrar cuenta es obligatorio en las tiendas. Idioma, tema y cerrar sesión hechos; faltan notificaciones y borrar cuenta"
+Notificaciones push (invitación resultado plaza),notifications,must,yes,partial,Lista en la app (S15) y envío por Expo push escritos; falta desplegar y una build con push
+Ajustes (idioma notificaciones borrar cuenta),settings,must,yes,partial,"Idioma, tema, cerrar sesión (aquí o en todos) y borrar cuenta hechos; faltan ajustes de notificaciones"
 Interfaz en español e inglés,settings,must,yes,yes,Idiomas confirmados por el usuario. Todas las pantallas hechas en es y en; diccionario tipado
 Evento social tras el partido (cerveza / quedada),matches,could,no,no,Idea propia de la marca Padel & Piwo; no existe en el original
-Crear torneo de 8 16 o 32 jugadores,tournaments,must,no,partial,En el original los torneos los crean los clubes; aquí cualquier miembro. S18; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
-Inscripción por parejas eligiendo al compañero por perfil,tournaments,must,yes,partial,Compañero elegido de una lista de búsqueda. S20; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
-El compañero acepta la invitación,tournaments,must,no,partial,Solo las parejas aceptadas cuentan para el cupo. S17 y S19; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
-Sorteo aleatorio automático al llenarse el cupo,tournaments,must,no,partial,Al aceptar la última pareja; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
-Cuadro de eliminación directa,tournaments,must,yes,partial,"S21, cada cruce abre su partido; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend"
-El ganador avanza al confirmarse el resultado,tournaments,must,no,partial,Reutiliza el flujo de resultado de los partidos. Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
-El organizador fija el resultado si hay bloqueo,tournaments,should,no,partial,S07 y S08 en modo organizador; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
-Retirar pareja antes del sorteo,tournaments,should,no,partial,S19; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
-Cancelar torneo (organizador),tournaments,should,no,partial,S19; Pantalla y reglas hechas sobre datos falsos; falta /replica-backend
+Crear torneo de 8 16 o 32 jugadores,tournaments,must,no,partial,"En el original los torneos los crean los clubes; aquí cualquier miembro. S18; Pantalla, reglas y backend Supabase escritos; falta conectar el proyecto y probarlo en real"
+Inscripción por parejas eligiendo al compañero por perfil,tournaments,must,yes,partial,"Compañero elegido de una lista de búsqueda. S20; Pantalla, reglas y backend Supabase escritos; falta conectar el proyecto y probarlo en real"
+El compañero acepta la invitación,tournaments,must,no,partial,"Solo las parejas aceptadas cuentan para el cupo. S17 y S19; Pantalla, reglas y backend Supabase escritos; falta conectar el proyecto y probarlo en real"
+Sorteo aleatorio automático al llenarse el cupo,tournaments,must,no,partial,"Al aceptar la última pareja; Pantalla, reglas y backend Supabase escritos; falta conectar el proyecto y probarlo en real"
+Cuadro de eliminación directa,tournaments,must,yes,partial,"S21, cada cruce abre su partido; Pantalla, reglas y backend Supabase escritos; falta conectar el proyecto y probarlo en real"
+El ganador avanza al confirmarse el resultado,tournaments,must,no,partial,"Reutiliza el flujo de resultado de los partidos. Pantalla, reglas y backend Supabase escritos; falta conectar el proyecto y probarlo en real"
+El organizador fija el resultado si hay bloqueo,tournaments,should,no,partial,"S07 y S08 en modo organizador; Pantalla, reglas y backend Supabase escritos; falta conectar el proyecto y probarlo en real"
+Retirar pareja antes del sorteo,tournaments,should,no,partial,"S19; Pantalla, reglas y backend Supabase escritos; falta conectar el proyecto y probarlo en real"
+Cancelar torneo (organizador),tournaments,should,no,partial,"S19; Pantalla, reglas y backend Supabase escritos; falta conectar el proyecto y probarlo en real"
 Notificaciones de torneo (invitación sorteo partido listo campeón),tournaments,should,no,partial,Lista en la app (S15); el push real llega con el backend
-Si el organizador borra su cuenta el torneo pasa a un jugador inscrito,tournaments,should,no,no,Decisión del usuario; elige a quien se inscribió primero
+Si el organizador borra su cuenta el torneo pasa a un jugador inscrito,tournaments,should,no,partial,delete_account en SQL (probado) + Edge Function delete-user; falta desplegar
 Reprogramar partido de torneo,tournaments,could,no,no,
 Reserva de pista en clubes,booking,could,yes,skip,Fuera de alcance: red de clubes y disponibilidad en tiempo real
 Pago de pista y partidos,payments,could,yes,skip,Fuera de alcance

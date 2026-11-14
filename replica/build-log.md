@@ -5,7 +5,7 @@
 
 Both batches are dated 2026-11-13.
 
-Everything runs on the fake data layer (`src/data/fake/`), which applies the same rules as `replica/schema.sql` and keeps its data in memory. A reload resets it. No feature is usable by real people until `/replica-backend` swaps in Supabase behind the same `Api` interface (`src/data/api.ts`). That is why almost every feature is `partial` in `features.csv`.
+Everything runs on the fake data layer (`src/data/fake/`), which applies the same rules as `supabase/migrations/20261114000100_schema.sql` and keeps its data in memory. A reload resets it. No feature is usable by real people until `/replica-backend` swaps in Supabase behind the same `Api` interface (`src/data/api.ts`). That is why almost every feature is `partial` in `features.csv`.
 
 How it was checked:
 - **Typecheck, lint and colours:** `npx tsc --noEmit` and `npx expo lint` pass with no errors. No raw colour appears in components or screens.
