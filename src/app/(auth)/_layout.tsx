@@ -3,7 +3,7 @@ import { Stack } from 'expo-router';
 import { useI18n } from '@/i18n';
 import { useTheme } from '@/theme';
 
-export const unstable_settings = { initialRouteName: 'welcome' };
+export const unstable_settings = { anchor: 'welcome' };
 
 export default function AuthLayout() {
   const t = useTheme();
