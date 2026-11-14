@@ -2,8 +2,8 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 
 import { AppText, Button, Screen, TextField } from '@/components/ui';
-import { toApiError } from '@/data/errors';
-import { useApi } from '@/data/provider';
+import { toApiError, type ErrorCode } from '@/data/errors';
+import { useApi, usingFakeData } from '@/data/provider';
 import { useI18n } from '@/i18n';
 
 // S03 Sign in.
@@ -13,7 +13,7 @@ export default function SignIn() {
   const { t } = i18n;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | undefined>();
+  const [error, setError] = useState<{ code: ErrorCode; text: string } | undefined>();
   const [busy, setBusy] = useState(false);
 
   async function submit() {
@@ -26,10 +26,21 @@ export default function SignIn() {
       i18n.setLocale(me.locale);
       router.replace('/');
     } catch (e) {
-      setError(t(`errors.${toApiError(e).code}`));
+      const code = toApiError(e).code;
+      setError({ code, text: t(`errors.${code}`) });
     } finally {
       setBusy(false);
     }
+  }
+
+  async function confirmEmail() {
+    // send a fresh code and go to the screen that takes it
+    try {
+      await api.auth.resendSignUpCode(email);
+    } catch {
+      // the code screen also offers to resend
+    }
+    router.push({ pathname: '/verify-email', params: { email: email.trim() } });
   }
 
   return (
@@ -40,17 +51,20 @@ export default function SignIn() {
         variant="password"
         value={password}
         onChangeText={setPassword}
-        error={error}
+        error={error?.text}
         autoComplete="current-password"
         onSubmitEditing={submit}
       />
       <Button label={t('signIn.submit')} size="lg" fullWidth loading={busy} onPress={submit} />
+      {error?.code === 'email_not_confirmed' ? <Button label={t('signIn.confirmEmail')} variant="secondary" fullWidth onPress={confirmEmail} /> : null}
       <Button label={t('signIn.forgot')} variant="ghost" fullWidth onPress={() => router.push('/forgot-password')} />
       <Button label={t('signIn.noAccount')} variant="ghost" fullWidth onPress={() => router.replace('/sign-up')} />
-      {/* only while the fake data layer is in use; /replica-backend removes it */}
-      <AppText variant="caption" tone="textMuted" align="center">
-        {t('signIn.demoHint')}
-      </AppText>
+      {/* only with the in-memory test data; never shown with the real server */}
+      {usingFakeData ? (
+        <AppText variant="caption" tone="textMuted" align="center">
+          {t('signIn.demoHint')}
+        </AppText>
+      ) : null}
     </Screen>
   );
 }

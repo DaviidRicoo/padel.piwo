@@ -5,7 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo } from 'react';
 
 import { ToastProvider } from '@/components/ui';
-import { ApiProvider, useUserId } from '@/data/provider';
+import { ApiProvider, useAuthReady, useUserId } from '@/data/provider';
 import { I18nProvider } from '@/i18n';
 import { AppThemeProvider, useTheme } from '@/theme';
 import { fontAssets } from '@/theme/fonts';
@@ -15,10 +15,8 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const [loaded, error] = useFonts(fontAssets);
 
-  useEffect(() => {
-    if (loaded || error) SplashScreen.hideAsync();
-  }, [loaded, error]);
-
+  // the splash stays up until fonts are in and the stored session has been read
+  // (ThemedNavigation hides it), so a signed-in player never sees the sign-in screen flash
   if (!loaded && !error) return null;
 
   return (
@@ -36,6 +34,12 @@ export default function RootLayout() {
 function ThemedNavigation() {
   const t = useTheme();
   const userId = useUserId();
+  const ready = useAuthReady();
+
+  useEffect(() => {
+    if (ready) SplashScreen.hideAsync();
+  }, [ready]);
+
   const navTheme = useMemo(() => {
     const base = t.name === 'dark' ? DarkTheme : DefaultTheme;
     return {
@@ -51,6 +55,8 @@ function ThemedNavigation() {
       },
     };
   }, [t]);
+
+  if (!ready) return null;
 
   return (
     <ThemeProvider value={navTheme}>

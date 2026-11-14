@@ -1,4 +1,4 @@
-// Error codes are the exception names the SQL functions raise (replica/schema.sql),
+// Error codes are the exception names the SQL functions raise (supabase/migrations/20261114000100_schema.sql),
 // plus a few the client adds. Screens translate them with t(`errors.${code}`).
 export const ERROR_CODES = [
   'not_authenticated',
@@ -41,6 +41,10 @@ export const ERROR_CODES = [
   'nothing_to_withdraw',
   'tournament_closed',
   'invalid_size',
+  'too_many_open',
+  'invalid_code',
+  'email_not_confirmed',
+  'rate_limited',
   'network',
   'unknown',
 ] as const;

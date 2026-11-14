@@ -1,12 +1,17 @@
 import { Stack } from 'expo-router';
 
+import { useApi, useUserId } from '@/data/provider';
 import { useI18n } from '@/i18n';
+import { usePushNotifications } from '@/lib/push';
 import { useTheme } from '@/theme';
 
 // Every screen for a signed-in player. The tabs are one entry; the rest open on top of them.
 export default function AppLayout() {
   const t = useTheme();
   const { t: tr } = useI18n();
+  const api = useApi();
+  const userId = useUserId();
+  usePushNotifications(api, !!userId);
   return (
     <Stack
       screenOptions={{

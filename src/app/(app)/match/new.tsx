@@ -10,6 +10,7 @@ import { useAction } from '@/data/useAction';
 import { SectionTitle } from '@/features/SectionTitle';
 import { useI18n } from '@/i18n';
 import { upcomingDays, zonedParts, zonedToUtc } from '@/lib/time';
+import { registerForPush } from '@/lib/push';
 import { useNow } from '@/lib/useNow';
 import { useTheme } from '@/theme';
 
@@ -70,7 +71,11 @@ export default function NewMatch() {
       },
       tr('newMatch.created'),
     );
-    if (ok) router.replace(`/match/${id}`);
+    if (ok) {
+      router.replace(`/match/${id}`);
+      // reminders start to matter with the first match: ask for push permission now
+      registerForPush(api, { ask: true });
+    }
   }
 
   return (

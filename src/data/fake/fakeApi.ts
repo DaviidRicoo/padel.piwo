@@ -1,4 +1,4 @@
-// In-memory data layer with the same rules as replica/schema.sql. Used until
+// In-memory data layer with the same rules as supabase/migrations/20261114000100_schema.sql. Used until
 // /replica-backend swaps in Supabase. State lives in memory: a reload resets it.
 import type { Api } from '../api';
 import { ApiError } from '../errors';
@@ -228,8 +228,27 @@ export function createFakeApi(opts: FakeApiOptions = {}): Api {
         accounts.push({ email: mail, password, profileId: id });
         userId = id;
         emit();
-        return id;
+        // the fake layer signs in straight away; the real one emails a code first
+        return { needsConfirmation: false };
       },
+      async verifySignUp(_email, code) {
+        await wait();
+        if (!/^\d{6}$/.test(code.trim())) throw new ApiError('invalid_code');
+      },
+      async resendSignUpCode() {
+        await wait();
+      },
+      async resetPassword(email, code, newPassword) {
+        await wait();
+        if (!/^\d{6}$/.test(code.trim())) throw new ApiError('invalid_code');
+        if (newPassword.length < 8) throw new ApiError('weak_password');
+        const acc = accounts.find((a) => a.email === email.trim().toLowerCase());
+        if (!acc) throw new ApiError('invalid_code');
+        acc.password = newPassword;
+        userId = acc.profileId;
+        emit();
+      },
+      isReady: () => true,
       async signIn(email, password) {
         await wait();
         const acc = accounts.find((a) => a.email === email.trim().toLowerCase() && a.password === password);
@@ -329,6 +348,9 @@ export function createFakeApi(opts: FakeApiOptions = {}): Api {
       if (place.length < 2 || place.length > 120) throw new ApiError('invalid_place');
       if (input.levelMin < LEVEL_MIN || input.levelMax > LEVEL_MAX || input.levelMax < input.levelMin) throw new ApiError('invalid_level_range');
       if (input.durationMinutes < 30 || input.durationMinutes > 240) throw new ApiError('invalid_duration');
+      // create_match(): at most 5 upcoming open matches per host
+      const open = [...matches.values()].filter((m) => m.hostId === host && m.status === 'open' && !m.tournamentId && !started(m));
+      if (open.length >= 5) throw new ApiError('too_many_open');
       const id = nextId('m');
       matches.set(id, {
         id,
@@ -502,6 +524,10 @@ export function createFakeApi(opts: FakeApiOptions = {}): Api {
       if (place.length < 2 || place.length > 120) throw new ApiError('invalid_place');
       if (!TOURNAMENT_SIZES.includes(input.players)) throw new ApiError('invalid_size');
       if (!(new Date(input.startsAt).getTime() > now().getTime())) throw new ApiError('starts_in_past');
+      // create_tournament(): at most 2 tournaments taking entries per organizer
+      if ([...tournaments.values()].filter((x) => x.organizerId === organizer && x.status === 'registration').length >= 2) {
+        throw new ApiError('too_many_open');
+      }
       const id = nextId('t');
       tournaments.set(id, {
         id,
@@ -631,6 +657,31 @@ export function createFakeApi(opts: FakeApiOptions = {}): Api {
         });
       // ranking(): won, then win rate, then played, then name
       return rows.sort((a, b) => b.won - a.won || b.winRate - a.winRate || b.played - a.played || a.displayName.localeCompare(b.displayName));
+    },
+
+    async deleteAccount() {
+      await wait();
+      const uid = me();
+      // the essentials of delete_account(): anonymise, leave future matches, sign out
+      const prof = profiles.get(uid)!;
+      Object.assign(prof, { displayName: 'Deleted player', avatarUrl: null, city: null, hand: null, courtSide: null, isDeleted: true });
+      for (const m of matches.values()) {
+        if (m.tournamentId || started(m) || (m.status !== 'open' && m.status !== 'full')) continue;
+        if (m.hostId === uid) m.status = 'cancelled';
+        const mine = m.players.find((x) => x.playerId === uid && x.status !== 'left');
+        if (mine) {
+          Object.assign(mine, { status: 'left', slot: null });
+          if (m.status === 'full') m.status = 'open';
+        }
+      }
+      const index = accounts.findIndex((a) => a.profileId === uid);
+      if (index >= 0) accounts.splice(index, 1);
+      userId = null;
+      emit();
+    },
+
+    async registerPushToken() {
+      // the fake layer sends no pushes
     },
 
     async listNotifications() {

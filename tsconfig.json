@@ -2,6 +2,9 @@
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
+    // Metro and Node both resolve "./file.ts" imports; tsc only checks types
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
     "paths": {
       "@/*": [
         "./src/*"
@@ -16,5 +19,7 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
-  ]
+  ],
+  // Edge Functions run on Deno with their own imports; the app's type check skips them
+  "exclude": ["node_modules", "supabase/functions"]
 }

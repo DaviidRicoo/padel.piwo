@@ -12,6 +12,7 @@ import { useAction } from '@/data/useAction';
 import { loadPeople, nameOf, type People } from '@/features/matches';
 import { SectionTitle } from '@/features/SectionTitle';
 import { useI18n } from '@/i18n';
+import { registerForPush } from '@/lib/push';
 import { useNow } from '@/lib/useNow';
 import { useTheme } from '@/theme';
 
@@ -61,7 +62,11 @@ export default function MatchDetail() {
     const ok = await run('join', async () => {
       outcome = await api.joinMatch(m.id);
     });
-    if (ok) toast(outcome === 'requested' ? t('matchDetail.requestSent') : t('matchDetail.joined'), 'success');
+    if (ok) {
+      toast(outcome === 'requested' ? t('matchDetail.requestSent') : t('matchDetail.joined'), 'success');
+      // the first match is when reminders start to matter: ask for push permission now
+      registerForPush(api, { ask: true });
+    }
   }
 
   const hasActions = a.canSubmitResult || a.canJoin || a.canLeave || a.canCancel;

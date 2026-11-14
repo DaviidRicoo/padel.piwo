@@ -1,5 +1,5 @@
 // Pure rules shared by the fake data layer and the screens. Each one mirrors a
-// rule in replica/schema.sql, so the app and the database agree.
+// rule in supabase/migrations/20261114000100_schema.sql, so the app and the database agree.
 import { ApiError } from './errors';
 import { teamOf, type Id, type Match, type SetScore, type Team, type Tournament, type TournamentPair } from './types';
 

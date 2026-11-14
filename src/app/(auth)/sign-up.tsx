@@ -38,8 +38,10 @@ export default function SignUp() {
 
     setBusy(true);
     try {
-      await api.auth.signUp({ email, password, displayName: name, locale: i18n.locale });
-      router.replace('/');
+      const { needsConfirmation } = await api.auth.signUp({ email, password, displayName: name, locale: i18n.locale });
+      // with email confirmation on, the account activates with the emailed code
+      if (needsConfirmation) router.push({ pathname: '/verify-email', params: { email: email.trim() } });
+      else router.replace('/');
     } catch (e) {
       const code = toApiError(e).code;
       const field = FIELD_OF[code];

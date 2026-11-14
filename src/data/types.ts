@@ -1,4 +1,4 @@
-// The app's data shapes. They follow replica/schema.sql column for column, in
+// The app's data shapes. They follow supabase/migrations/20261114000100_schema.sql column for column, in
 // camelCase, so the Supabase data layer can replace the fake one without any
 // screen changing.
 
@@ -84,7 +84,7 @@ export interface RankingEntry {
 }
 
 // ---------------------------------------------------------------- tournaments
-// tournaments, tournament_pairs and tournament_ties in replica/schema.sql
+// tournaments, tournament_pairs and tournament_ties in supabase/migrations/20261114000100_schema.sql
 
 export type TournamentStatus = 'registration' | 'in_progress' | 'finished' | 'cancelled';
 
@@ -149,14 +149,13 @@ export type NotificationType =
   | 'result_reminder'
   | 'tournament_pair_invite'
   | 'tournament_pair_accepted'
-  // the SQL stores a declined invite as tournament_pair_accepted with accepted: false;
-  // the backend maps that payload to this type
   | 'tournament_pair_declined'
   | 'tournament_pair_withdrawn'
   | 'tournament_started'
   | 'tournament_match_ready'
   | 'tournament_cancelled'
-  | 'tournament_finished';
+  | 'tournament_finished'
+  | 'tournament_organizer_assigned';
 
 export interface AppNotification {
   id: Id;

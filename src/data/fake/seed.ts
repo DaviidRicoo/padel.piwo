@@ -1,7 +1,8 @@
 // Sample data for the fake data layer: invented residents and matches placed
 // around "now", so every screen and state has something real to show.
 // Sign in with any seed email and the password below.
-import { addDays, addMinutes, upcomingDays, zonedToUtc } from '@/lib/time';
+// relative with the .ts extension so scripts/seed-supabase.ts can run it under Node too
+import { addDays, addMinutes, upcomingDays, zonedToUtc } from '../../lib/time.ts';
 
 import type { AppNotification, Match, MatchPlayer, Profile, SetScore, Tournament, TournamentPair, TournamentTie } from '../types';
 

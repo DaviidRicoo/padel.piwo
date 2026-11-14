@@ -21,6 +21,7 @@ export default function AuthLayout() {
       <Stack.Screen name="sign-up" options={{ title: tr('signUp.title') }} />
       <Stack.Screen name="sign-in" options={{ title: tr('signIn.title') }} />
       <Stack.Screen name="forgot-password" options={{ title: tr('forgot.title') }} />
+      <Stack.Screen name="verify-email" options={{ title: tr('verify.title') }} />
     </Stack>
   );
 }

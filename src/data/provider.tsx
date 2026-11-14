@@ -3,11 +3,18 @@ import { createContext, useContext, useEffect, useEffectEvent, useState, useSync
 import type { Api } from './api';
 import { toApiError, type ApiError } from './errors';
 import { createFakeApi } from './fake/fakeApi';
+import { createSupabaseApi } from './supabase/supabaseApi';
 import type { Id } from './types';
 
-// The fake layer until /replica-backend; EXPO_PUBLIC_DEMO_USER starts signed in
+// Supabase when its URL and publishable key are set (.env.local, see .env.example);
+// otherwise the in-memory fake layer, where EXPO_PUBLIC_DEMO_USER starts signed in
 // as a seed account (used for screenshots).
-const defaultApi: Api = createFakeApi({ demoEmail: process.env.EXPO_PUBLIC_DEMO_USER });
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
+const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+export const usingFakeData = !(SUPABASE_URL && SUPABASE_KEY);
+const defaultApi: Api = usingFakeData
+  ? createFakeApi({ demoEmail: process.env.EXPO_PUBLIC_DEMO_USER })
+  : createSupabaseApi(SUPABASE_URL!, SUPABASE_KEY!);
 
 const ApiContext = createContext<Api>(defaultApi);
 
@@ -23,6 +30,12 @@ export function useApi(): Api {
 export function useUserId(): Id | null {
   const api = useApi();
   return useSyncExternalStore(api.subscribe, api.auth.currentUserId, api.auth.currentUserId);
+}
+
+/** False until a stored session has been read at start-up (the splash stays up meanwhile). */
+export function useAuthReady(): boolean {
+  const api = useApi();
+  return useSyncExternalStore(api.subscribe, api.auth.isReady, api.auth.isReady);
 }
 
 export interface QueryState<T> {
