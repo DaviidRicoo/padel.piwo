@@ -1,7 +1,15 @@
 // F04 Enter a result: S07 -> S08 -> S07 -> S09. Seed: m_seed_15 finished with no result
 // (Marc+Ana vs Diego+Jan), m_seed_14 sent by Eva's team for Ana to confirm, m_seed_13 sent
 // 8 days ago by Ana's partner (Ana can confirm as host).
-import { bump, expect, navigate, openApp, seeText, signInAs, tab, tap, tapAndConfirm, test, type Page } from './fixtures';
+import { bump, expect, navigate, openApp, seeText, signInAs, stepperValue, tab, tap, tapAndConfirm, test, type Page } from './fixtures';
+
+/** A common-score chip of one set ("6-3"), by its visible text. */
+const quick = (page: Page, set: number, score: string) =>
+  page
+    .getByRole('radiogroup', { name: `Resultados habituales, Set ${set}` })
+    .filter({ visible: true })
+    .last()
+    .getByRole('radio', { name: new RegExp(`^${score},`) });
 
 async function enter(page: Page, sets: [number, number][]) {
   await openApp(page, '/match/m_seed_15');
@@ -37,6 +45,38 @@ test.describe('F04 enter and confirm a result', () => {
     await seeText(page, 'Resultado confirmado');
     await page.goBack();
     await expect(page.getByRole('button', { name: /Pista 2, Competitivo, 6-3 6-2, Derrota/ })).toBeVisible();
+  });
+
+  test('F04-H2 6-3 6-2 in five taps with the common scores', async ({ page }) => {
+    await openApp(page, '/');
+    await tab(page, 'Recientes').click();
+    await tap(page, /Falta el resultado/); // 1
+    await tap(page, 'Introducir resultado'); // 2
+    await quick(page, 1, '6-3').click(); // 3
+    await quick(page, 2, '6-2').click(); // 4
+    await expect(quick(page, 1, '6-3')).toHaveAttribute('aria-checked', 'true');
+    expect(await stepperValue(page, 'Set 1, Equipo A')).toBe(6);
+    expect(await stepperValue(page, 'Set 1, Equipo B')).toBe(3);
+    await tap(page, 'Enviar resultado'); // 5
+    await seeText(page, 'Falta que el otro equipo lo confirme.');
+    await signInAs(page, 'diego');
+    await tab(page, 'Recientes').click();
+    await expect(page.getByRole('button', { name: /Pista 2, Competitivo, 6-3 6-2, Por confirmar/ })).toBeVisible();
+  });
+
+  test('F04-H3 a set the other team won, then fine-tuned with the counters', async ({ page }) => {
+    await openApp(page, '/match/m_seed_15');
+    await tap(page, 'Introducir resultado');
+    await quick(page, 1, '4-6').click();
+    await expect(quick(page, 1, '4-6')).toHaveAccessibleName(/^4-6, gana Equipo B/);
+    expect(await stepperValue(page, 'Set 1, Equipo A')).toBe(4);
+    expect(await stepperValue(page, 'Set 1, Equipo B')).toBe(6);
+    // 6-7 by chip, then the counter takes it to 8-6 style scores the chips do not have
+    await quick(page, 2, '6-7').click();
+    await bump(page, 'Set 2, Equipo B', -1);
+    await expect(page.getByRole('radiogroup', { name: 'Resultados habituales, Set 2' }).locator('[aria-checked="true"]')).toHaveCount(0);
+    await expect(quick(page, 2, '6-6')).toHaveCount(0);
+    await seeText(page, 'Un set no puede acabar en empate.');
   });
 
   test('F04-E1 a tied set is refused straight away', async ({ page }) => {

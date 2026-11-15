@@ -61,12 +61,12 @@ Click counts for the clone are counted from the Playwright cases. Counts for Pla
 | F01 sign up | 5 taps, then the level questionnaire | 3 taps (Crear cuenta, submit, confirm the emailed code). No questionnaire: everyone starts at 4,00 | keep the short path; add the questionnaire (should) as an optional step that can be skipped |
 | F02 create a match | 4 | 4 (Crear partido, day, time, Publicar). Place, type, level and notes have defaults | keep |
 | F03 join | 2 | 2 (card, Unirme). Outside the level range it becomes a request to the host | keep |
-| **F04 enter a result** | **5** | **about 20 for 6-3 6-2**: card, Introducir resultado, then one tap of + per game (6+3+6+2 = 17), Enviar. The rival confirms in 2 | **fix**: pick each set score from chips (6-0 … 7-6), or start each counter at 6 for the side that won. This matters most because every match ends here, tournament matches included |
+| F04 enter a result | 5 | 5 for 6-3 6-2 (card, Introducir resultado, chip 6-3, chip 6-2, Enviar; F04-H2). Was about 20 with only the + buttons. Odd scores (a 10-8 third set) still use − and +. The rival confirms in 2 | fixed 2026-11-15 |
 | F05 ranking | 1 | 1 | keep |
 | F06 edit profile | 3 | 3 | keep; add the photo |
 | F07 create a tournament | 4 | 3 plus the name | keep |
 | F08 register a pair | 4 + 2 | 3 + the search text; the partner 2 (Torneos, Aceptar) | keep |
-| F09 play the tournament | 5 per match | same as F04: about 20 per match | fix with F04 |
+| F09 play the tournament | 5 per match | same screen as F04: 5 per match | fixed with F04 |
 
 Other differences:
 
@@ -82,7 +82,7 @@ Other differences:
 ## Top five to build next
 
 1. **Push on a real phone**: a development build with EAS, register the token, receive "someone joined" and the end-of-match reminder. Closes 2 musts and the tournament notifications.
-2. **Faster score entry** (behaviour fix for F04 and F09): from about 20 taps to 5 or 6.
+2. ~~**Faster score entry**~~ (behaviour fix for F04 and F09): done 2026-11-15. Each set has chips for 6-0 … 7-6 and 0-6 … 6-7; 6-3 6-2 now takes 5 taps.
 3. **Notification settings** (must): a switch per kind (matches, results, tournaments, reminders), saved on the profile and honoured by `send-push`.
 4. **Profile photo** (must): pick from the gallery, crop to a square, upload to a Storage bucket with a size and type limit, show it in every avatar.
 5. **Password recovery on the real backend** (must): request a code to a real mailbox, set a new password, sign in. Mostly a test; fix whatever it shows.

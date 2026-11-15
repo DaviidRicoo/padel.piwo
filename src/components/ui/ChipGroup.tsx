@@ -11,6 +11,8 @@ export interface Chip<T extends string> {
   /** a second, smaller line (the date under "Mañana") */
   sublabel?: string;
   disabled?: boolean;
+  /** spoken name when the visible label needs context ("6-3, gana Equipo A"); must start with the label */
+  accessibilityLabel?: string;
 }
 
 export interface ChipGroupProps<T extends string> {
@@ -21,12 +23,28 @@ export interface ChipGroupProps<T extends string> {
   onChange: (value: T) => void;
   /** one scrolling row (days) or a wrapping grid (times) */
   layout?: 'scroll' | 'wrap';
+  /** wrap only: a fixed number of equal-width chips per row (the set scores) */
+  columns?: number;
 }
 
 /** Pick one of many options. A radio group for screen readers. */
-export function ChipGroup<T extends string>({ accessibilityLabel, chips, value, onChange, layout = 'wrap' }: ChipGroupProps<T>) {
+export function ChipGroup<T extends string>({ accessibilityLabel, chips, value, onChange, layout = 'wrap', columns }: ChipGroupProps<T>) {
   const t = useTheme();
-  const items = chips.map((c) => <ChipButton key={c.value} chip={c} selected={c.value === value} onPress={() => onChange(c.value)} />);
+  const button = (c: Chip<T>) => <ChipButton key={c.value} chip={c} selected={c.value === value} onPress={() => onChange(c.value)} compact={!!columns} />;
+  if (columns) {
+    const rows: Chip<T>[][] = [];
+    for (let i = 0; i < chips.length; i += columns) rows.push(chips.slice(i, i + columns));
+    return (
+      <View accessibilityRole="radiogroup" accessibilityLabel={accessibilityLabel} style={{ gap: t.space[2] }}>
+        {rows.map((row, i) => (
+          <View key={i} style={{ flexDirection: 'row', gap: t.space[1] }}>
+            {row.map(button)}
+          </View>
+        ))}
+      </View>
+    );
+  }
+  const items = chips.map(button);
   if (layout === 'scroll') {
     return (
       <ScrollView
@@ -47,13 +65,13 @@ export function ChipGroup<T extends string>({ accessibilityLabel, chips, value, 
   );
 }
 
-function ChipButton<T extends string>({ chip, selected, onPress }: { chip: Chip<T>; selected: boolean; onPress: () => void }) {
+function ChipButton<T extends string>({ chip, selected, onPress, compact }: { chip: Chip<T>; selected: boolean; onPress: () => void; compact: boolean }) {
   const t = useTheme();
   const focus = useFocusRing();
   return (
     <Pressable
       accessibilityRole="radio"
-      accessibilityLabel={chip.sublabel ? `${chip.label}, ${chip.sublabel}` : chip.label}
+      accessibilityLabel={chip.accessibilityLabel ?? (chip.sublabel ? `${chip.label}, ${chip.sublabel}` : chip.label)}
       // aria-* props, not accessibilityState: react-native-web ignores accessibilityState (BUG-002)
       aria-checked={selected}
       aria-disabled={!!chip.disabled}
@@ -62,9 +80,9 @@ function ChipButton<T extends string>({ chip, selected, onPress }: { chip: Chip<
       {...focus.handlers}
       style={({ pressed }) => [
         {
-          minWidth: chip.sublabel ? 64 : 68,
+          ...(compact ? { flex: 1, minWidth: t.layout.touchMin } : { minWidth: chip.sublabel ? 64 : 68 }),
           minHeight: t.layout.touchMin,
-          paddingHorizontal: t.space[3],
+          paddingHorizontal: compact ? 0 : t.space[3],
           paddingVertical: t.space[2],
           borderRadius: t.radius.md,
           alignItems: 'center',

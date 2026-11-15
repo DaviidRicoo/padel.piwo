@@ -145,8 +145,10 @@ export const en: Record<MessageKey, string> = {
   'matchDetail.awaitingResult': 'The match has started. When it ends, one of you sends the result.',
 
   'result.title': 'Result',
-  'result.help': 'Enter each team’s games in every set. The other team will have to confirm it.',
+  'result.help': 'Tap each set’s score, or set the games with − and +. The other team will have to confirm it.',
   'result.set': 'Set {n}',
+  'result.common': 'Common scores, {set}',
+  'result.wins': '{team} wins',
   'result.addSet': 'Add a third set',
   'result.removeSet': 'Remove third set',
   'result.tie': 'A set cannot end in a tie.',

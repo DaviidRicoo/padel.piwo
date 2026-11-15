@@ -145,8 +145,10 @@ export const es = {
   'matchDetail.awaitingResult': 'El partido ya ha empezado. Cuando acabe, uno de vosotros envía el resultado.',
 
   'result.title': 'Resultado',
-  'result.help': 'Pon los juegos de cada equipo en cada set. El otro equipo tendrá que confirmarlo.',
+  'result.help': 'Toca el resultado de cada set, o ajusta los juegos con − y +. El otro equipo tendrá que confirmarlo.',
   'result.set': 'Set {n}',
+  'result.common': 'Resultados habituales, {set}',
+  'result.wins': 'gana {team}',
   'result.addSet': 'Añadir tercer set',
   'result.removeSet': 'Quitar tercer set',
   'result.tie': 'Un set no puede acabar en empate.',

@@ -25,7 +25,7 @@ How it was checked:
 | S05 Matches | 2026-11-13 | partial | backend | The tab bar's default height cut the labels at 390 px; it now uses the `tab-bar` token plus the safe area. |
 | S06 Create match | 2026-11-13 | partial | backend | Day and time chips instead of a native date picker, so it works the same on web and phones. Times are entered in Gdańsk time and stored in UTC (`src/lib/time.ts`), including around clock changes. |
 | S07 Match detail | 2026-11-13 | partial | backend; decline a join request; share link | Biggest screen: join, request, leave, cancel, accept, enter result, confirm, dispute, and the host's 7-day confirmation all live here. |
-| S08 Enter result | 2026-11-13 | partial | backend | — |
+| S08 Enter result | 2026-11-13, 2026-11-15 | done | — | 2026-11-15: entering a result took about 20 taps (one + per game). Each set now has chips for the common scores (6-0 … 7-6 for either team), so 6-3 6-2 takes 5 taps; − and + stay for odd scores. Fourteen chips fit at 390 px only as two fixed rows of seven (new `columns` option in ChipGroup). |
 | S09 Recent matches | 2026-11-13 | partial | backend | — |
 | S10 Ranking | 2026-11-13 | partial | backend; extra stats (losses, streak, sets) | Long names and "100 %" broke the row at 390 px: names now wrap to two lines and the win-rate column is wider. |
 | S11 My profile | 2026-11-13 | partial | backend; Edit profile (S12) is a stub | — |

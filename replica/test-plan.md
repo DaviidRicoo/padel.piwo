@@ -6,7 +6,7 @@ Env: local web build (`npx expo start --web --port 8082`) on the in-memory fake 
 How to run everything:
 
 ```bash
-npm run test:e2e                                  # 101 Playwright cases (starts the server if needed)
+npm run test:e2e                                  # 103 Playwright cases (starts the server if needed)
 PGLITE_ENTRY=<pglite>/dist/index.js node replica/tests/schema.test.mjs   # 22 database rule tests
 node replica/tests/core-loop.mjs http://localhost:8082 shots   # older click-throughs, still kept
 node replica/tests/batch2-flow.mjs http://localhost:8082 shots
@@ -20,7 +20,7 @@ Every Playwright case fails on any console error, page error or 5xx response (`e
 
 | suite | cases | passed | failed | skipped |
 | --- | --- | --- | --- | --- |
-| Playwright `e2e/` | 101 | 100 | 0 | 1 (BUG-003, known, `test.fixme`) |
+| Playwright `e2e/` | 103 | 102 | 0 | 1 (BUG-003, known, `test.fixme`) |
 | database rules (PGlite) | 22 | 22 | 0 | 0 |
 | older click-throughs (core loop, batch 2) | 17 steps | 17 | 0 | 0 |
 | manual (below) | 9 | not run in this pass | | |
@@ -73,6 +73,8 @@ Every Playwright case fails on any console error, page error or 5xx response (`e
 | case | type | steps | expected | auto | result |
 | --- | --- | --- | --- | --- | --- |
 | F04-H1 | happy | Ana sends 6-3 6-2; Diego confirms | waiting text for Ana; Diego's Recientes shows Derrota with the score | e2e/f04-result | pass |
+| F04-H2 | happy: common scores | Recientes, the card, Introducir resultado, chip 6-3, chip 6-2, Enviar | sent in 5 taps; counters show 6 and 3; Diego sees "6-3 6-2, Por confirmar" | e2e/f04-result | pass |
+| F04-H3 | edge: other team won, odd score | chip 4-6 in set 1; chip 6-7 in set 2, then − on team B | chip read as "4-6, gana Equipo B"; no chip selected at 6-6; tie error | e2e/f04-result | pass |
 | F04-E1 | edge: invalid score | 6-6 in set 1 | "Un set no puede acabar en empate.", not sent | e2e/f04-result | pass |
 | F04-E2 | edge: no winner | one set each, then a 10-8 third | asks for a third set, then sends | e2e/f04-result | pass |
 | F04-E3 | edge: rival disputes | Diego disputes | banner, "Enviar un resultado nuevo", Ana told | e2e/f04-result | pass |
