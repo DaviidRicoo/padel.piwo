@@ -62,7 +62,8 @@ export function Button({
           paddingHorizontal: size === 'sm' ? t.space[4] : t.space[6],
           // the pill is the action shape; cards and fields keep the rounded rectangle
           borderRadius: t.radius.pill,
-          transform: pressed && !inactive ? [{ scale: t.scale.pressed }] : undefined,
+          // always an array: going from a transform to undefined crashes React Native on phones
+          transform: [{ scale: pressed && !inactive ? t.scale.pressed : 1 }],
           backgroundColor: v.bg ? t.color[v.bg] : 'transparent',
           borderWidth: v.border ? 1 : 0,
           borderColor: v.border ? t.color[v.border] : undefined,

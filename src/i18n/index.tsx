@@ -43,7 +43,8 @@ function capitalize(s: string) {
 function build(locale: Locale, setLocale: (l: Locale) => void): I18n {
   const dict = MESSAGES[locale];
   const intlLocale = INTL_LOCALE[locale];
-  const plural = new Intl.PluralRules(intlLocale);
+  // Not Intl.PluralRules: Hermes on iOS does not have it. Spanish and English both
+  // use "one" for exactly 1 and "other" for the rest, which is all the dictionaries hold.
   const fill = (text: string, vars?: Vars) => (vars ? text.replace(/\{(\w+)\}/g, (_, k: string) => String(vars[k] ?? `{${k}}`)) : text);
   const t = (key: MessageKey, vars?: Vars) => fill(dict[key] ?? es[key] ?? key, vars);
   const weekday = new Intl.DateTimeFormat(intlLocale, { weekday: 'short', timeZone: APP_TIME_ZONE });
@@ -57,7 +58,7 @@ function build(locale: Locale, setLocale: (l: Locale) => void): I18n {
     setLocale,
     t,
     tn: (base, count, vars) => {
-      const form = plural.select(count) === 'one' ? 'one' : 'other';
+      const form = count === 1 ? 'one' : 'other';
       return t(`${base}_${form}` as MessageKey, { count, ...vars });
     },
     formatWhen: (iso) => {

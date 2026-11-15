@@ -5,10 +5,42 @@ Only what was reproduced is here; guesses are under "To check" in `test-plan.md`
 
 | | open | fixed |
 | --- | --- | --- |
-| S1 | 0 | 0 |
+| S1 | 0 | 2 |
 | S2 | 0 | 1 |
 | S3 | 0 | 4 |
 | S4 | 1 | 0 |
+
+### BUG-008: on a phone, the app crashes on the first tap of a button
+
+- Severity: S1 (nothing can be used on a phone)
+- Flow / case: every flow
+- Screen: S01 Welcome first, then every Button and tappable Card
+- Build: cb879b6 + the BUG-007 fix  Browser / device: owner's iPhone, Expo Go (2026-11-15)
+
+Steps
+1. Open the app on a phone and tap "Crear cuenta" or "Entrar".
+
+Expected: the button shrinks slightly while pressed and opens the next screen.
+Actual: "TypeError: Cannot read property 'forEach' of null" in `processTransform.js`, from `Button.tsx`.
+Cause: the pressed style set `transform` to a scale and, on release, to `undefined`; React Native on phones runs every transform it diffs through `processTransform`, which does not accept an empty one. react-native-web does, so the web suite never saw it.
+Fix: `Button` and `Card` always set a transform, scale 1 at rest.
+Status: fixed on 2026-11-15 (`design/refresh`), checked on the owner's iPhone.
+
+### BUG-007: on an iPhone, the app does not start
+
+- Severity: S1 (red screen before the first screen)
+- Flow / case: start-up
+- Screen: all
+- Build: cb879b6  Browser / device: owner's iPhone, Expo Go (2026-11-15)
+
+Steps
+1. Open the app on an iPhone.
+
+Expected: the welcome screen.
+Actual: "Render Error: undefined cannot be used as a constructor" at `new Intl.PluralRules` in `src/i18n/index.tsx`.
+Cause: Hermes on iOS has no `Intl.PluralRules`, and its `Intl.DateTimeFormat` has `format()` but no `formatToParts()`, which `zonedParts()` in `src/lib/time.ts` used (the next crash in line). Web and Android have both.
+Fix: plurals use `count === 1` (the rule for both Spanish and English); `zonedParts()` reads the numbers of the en-GB text when `formatToParts` is missing, checked equal to `formatToParts` over 150,172 instants across two years and their clock changes.
+Status: fixed on 2026-11-15 (`design/refresh`), checked on the owner's iPhone.
 
 ### BUG-006: password recovery signs the player in even when the new password is not saved
 

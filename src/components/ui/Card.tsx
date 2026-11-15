@@ -39,7 +39,9 @@ export function Card({ children, onPress, accessibilityLabel, padding, highlight
       {...focus.handlers}
       style={({ pressed }) => [
         base,
-        pressed ? { backgroundColor: t.color.surface2, transform: [{ scale: 0.99 }] } : null,
+        // the transform is always set: dropping it after a press crashes React Native on phones
+        { transform: [{ scale: pressed ? 0.99 : 1 }] },
+        pressed ? { backgroundColor: t.color.surface2 } : null,
         focus.ring,
         style,
       ]}>

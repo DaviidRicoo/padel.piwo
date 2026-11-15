@@ -5,19 +5,37 @@ export const APP_TIME_ZONE = 'Europe/Warsaw';
 const MINUTE = 60_000;
 const DAY = 24 * 60 * MINUTE;
 
+const formatters = new Map<string, Intl.DateTimeFormat>();
+
+function formatterFor(timeZone: string): Intl.DateTimeFormat {
+  let f = formatters.get(timeZone);
+  if (!f) {
+    f = new Intl.DateTimeFormat('en-GB', {
+      timeZone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23',
+    });
+    formatters.set(timeZone, f);
+  }
+  return f;
+}
+
 /** The calendar date and time a UTC instant has in the app time zone. */
 export function zonedParts(date: Date, timeZone = APP_TIME_ZONE) {
-  const parts = new Intl.DateTimeFormat('en-GB', {
-    timeZone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hourCycle: 'h23',
-  }).formatToParts(date);
+  const f = formatterFor(timeZone);
+  // Hermes on iOS has DateTimeFormat.format() but not formatToParts(); there, read the
+  // numbers of the en-GB text instead ("16/11/2026, 18:00": day, month, year, hour, minute)
+  if (typeof f.formatToParts !== 'function') {
+    const [day, month, year, hour, minute] = (f.format(date).match(/\d+/g) ?? []).map(Number);
+    return { year, month, day, hour: hour % 24, minute };
+  }
+  const parts = f.formatToParts(date);
   const get = (type: string) => Number(parts.find((p) => p.type === type)?.value ?? 0);
-  return { year: get('year'), month: get('month'), day: get('day'), hour: get('hour'), minute: get('minute') };
+  return { year: get('year'), month: get('month'), day: get('day'), hour: get('hour') % 24, minute: get('minute') };
 }
 
 function offsetMs(utcMs: number, timeZone: string): number {
