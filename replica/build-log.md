@@ -103,3 +103,10 @@ Visual pass over every screen with the awesome-design-md `apple` style as the re
 - **Screens:** large titles on the tabs on the page's own background; welcome always on the brand navy so the logo has no visible box; the design-system link in Settings only in development builds; notices as soft tints instead of outlined boxes.
 - **Forms:** fields on the card surface; no autocorrect or spellcheck on email, password and code fields.
 - **Checked:** typecheck, lint, both click-throughs (17 steps, 0 console errors). The two checks for the "Estadísticas" heading now look for the stats strip, which is labelled "Estadísticas" for screen readers.
+
+## Player photos (2026-11-15, trial the owner kept)
+
+- **Photos:** four cut-out players from the owner (`image/`), cleaned and shrunk to 900 px tall in `assets/images/players/`. Two came with a white background and one with a checkerboard painted in; both were removed.
+- **Where:** S01 shows two players above the buttons, with a smaller logo. S05, S09, S10 and S17 each open with a `PhotoBanner` (`src/features/PhotoBanner.tsx`), on brand navy in both themes, with the player's head above the top edge. The S05 and S17 banners open "Crear partido" and "Crear torneo".
+- **Accessibility:** the photos are decoration only (`alt=""` on the web, hidden on phones). Without that, axe flagged `image-alt` on S01, S05 and S17.
+- **Before a public release:** these are real people with visible brands (Nox, Nike, Atlético de Madrid, Hummel). The app needs their written permission, and ideally photos without logos.

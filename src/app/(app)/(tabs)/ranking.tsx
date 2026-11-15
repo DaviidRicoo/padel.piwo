@@ -6,6 +6,7 @@ import { View } from 'react-native';
 import { RankingHeader, RankingRow } from '@/components/app';
 import { AppText, EmptyState, ErrorState, Group, LoadingCards, Screen, SegmentedControl } from '@/components/ui';
 import { useApi, useQuery, useUserId } from '@/data/provider';
+import { PhotoBanner, PLAYER_PHOTOS } from '@/features/PhotoBanner';
 import { useI18n } from '@/i18n';
 import { seasonStart } from '@/lib/time';
 import { useTheme } from '@/theme';
@@ -60,6 +61,7 @@ export default function RankingScreen() {
 
   return (
     <Screen onRefresh={q.refetch} footer={footer}>
+      <PhotoBanner title={tr('ranking.bannerTitle')} body={tr('ranking.bannerBody')} photo={PLAYER_PHOTOS.swing} />
       <View>
         <SegmentedControl
           accessibilityLabel={tr('ranking.period')}

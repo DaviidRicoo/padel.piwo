@@ -64,6 +64,8 @@ export const es = {
   'signIn.confirmEmail': 'Confirmar mi correo',
 
   'matches.create': 'Crear partido',
+  'matches.bannerTitle': '¿Echamos un partido?',
+  'matches.bannerBody': 'Crea uno y los demás se apuntan.',
   'matches.mine': 'Mis próximos partidos',
   'matches.open': 'Partidos abiertos',
   'matches.emptyOpenTitle': 'No hay partidos abiertos',
@@ -156,10 +158,14 @@ export const es = {
   'result.submit': 'Enviar resultado',
   'result.sent': 'Resultado enviado. Falta que lo confirme el otro equipo.',
 
+  'recent.bannerTitle': 'Tus últimos partidos en la resi',
+  'recent.bannerBody': 'Resultados, y lo que falta por confirmar.',
   'recent.emptyTitle': 'Aún no has jugado',
   'recent.emptyBody': 'Cuando juegues un partido, aparecerá aquí con su resultado.',
   'recent.emptyAction': 'Ver partidos abiertos',
 
+  'ranking.bannerTitle': 'Sé el número 1 de la resi',
+  'ranking.bannerBody': 'Gana partidos competitivos y sube en la tabla.',
   'ranking.season': 'Temporada',
   'ranking.all': 'Total',
   'ranking.period': 'Periodo del ranking',
@@ -267,6 +273,8 @@ export const es = {
   'search.emptyBody': 'Prueba con otra parte del nombre.',
 
   'tournaments.create': 'Crear torneo',
+  'tournaments.bannerTitle': 'Gana el torneo de la residencia',
+  'tournaments.bannerBody': 'Por parejas, con cuadro y campeones.',
   'tournaments.open': 'Inscripción abierta',
   'tournaments.running': 'En curso',
   'tournaments.past': 'Terminados',

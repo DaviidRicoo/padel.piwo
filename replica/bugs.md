@@ -56,7 +56,7 @@ Expected: the player is signed in (the password they typed works).
 Actual: `verifyOtp` signs the login in, `onAuthStateChange` opens the app, then `updateUser` fails with `same_password` and the screen shows an unknown error. Any other failure of `updateUser` (network) left the player signed in with the old password.
 Cause: `resetPassword()` in `src/data/supabase/supabaseApi.ts` let the auth listener react to the recovery session before the password was saved.
 Fix: the listener is held back while `resetPassword()` runs; `same_password` counts as success; any other failure signs the recovery session out and shows the error.
-Status: fixed on 2026-11-15 (`design/refresh`), not yet tried with a real mailbox.
+Status: fixed on 2026-11-15 (`design/refresh`); the owner reset their password with their own mailbox on the real project the same day.
 
 ### BUG-005: on the web, Space does not toggle a switch or pick a chip or segment
 

@@ -5,6 +5,7 @@ import { MatchCard } from '@/components/app';
 import { Button, EmptyState, ErrorState, LoadingCards, Screen } from '@/components/ui';
 import { useApi, useQuery, useUserId } from '@/data/provider';
 import { loadPeople, toMatchCard } from '@/features/matches';
+import { PhotoBanner, PLAYER_PHOTOS } from '@/features/PhotoBanner';
 import { SectionTitle } from '@/features/SectionTitle';
 import { useI18n } from '@/i18n';
 
@@ -25,6 +26,7 @@ export default function MatchesScreen() {
 
   return (
     <Screen onRefresh={q.refetch} footer={footer}>
+      <PhotoBanner title={t('matches.bannerTitle')} body={t('matches.bannerBody')} photo={PLAYER_PHOTOS.ball} onPress={() => router.push('/match/new')} />
       {q.loading ? (
         <LoadingCards />
       ) : q.error || !q.data ? (

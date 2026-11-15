@@ -5,6 +5,7 @@ import { MatchCard } from '@/components/app';
 import { EmptyState, ErrorState, LoadingCards, Screen } from '@/components/ui';
 import { useApi, useQuery, useUserId } from '@/data/provider';
 import { loadPeople, toMatchCard } from '@/features/matches';
+import { PhotoBanner, PLAYER_PHOTOS } from '@/features/PhotoBanner';
 import { useI18n } from '@/i18n';
 
 // S09 Recent matches: everything I have played, newest first, with its result
@@ -22,6 +23,7 @@ export default function RecentScreen() {
 
   return (
     <Screen onRefresh={q.refetch}>
+      <PhotoBanner title={t('recent.bannerTitle')} body={t('recent.bannerBody')} photo={PLAYER_PHOTOS.ready} />
       {q.loading ? (
         <LoadingCards />
       ) : q.error || !q.data ? (

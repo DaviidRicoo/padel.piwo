@@ -64,6 +64,8 @@ export const en: Record<MessageKey, string> = {
   'signIn.confirmEmail': 'Confirm my email',
 
   'matches.create': 'Create match',
+  'matches.bannerTitle': 'Fancy a match?',
+  'matches.bannerBody': 'Create one and the others join in.',
   'matches.mine': 'My upcoming matches',
   'matches.open': 'Open matches',
   'matches.emptyOpenTitle': 'No open matches',
@@ -156,10 +158,14 @@ export const en: Record<MessageKey, string> = {
   'result.submit': 'Send result',
   'result.sent': 'Result sent. The other team still has to confirm it.',
 
+  'recent.bannerTitle': 'Your latest matches at the residence',
+  'recent.bannerBody': 'Results, and what is still to confirm.',
   'recent.emptyTitle': 'You have not played yet',
   'recent.emptyBody': 'When you play a match, it shows up here with its result.',
   'recent.emptyAction': 'See open matches',
 
+  'ranking.bannerTitle': 'Be number 1 at the residence',
+  'ranking.bannerBody': 'Win competitive matches and climb the table.',
   'ranking.season': 'Season',
   'ranking.all': 'All time',
   'ranking.period': 'Ranking period',
@@ -267,6 +273,8 @@ export const en: Record<MessageKey, string> = {
   'search.emptyBody': 'Try another part of the name.',
 
   'tournaments.create': 'Create tournament',
+  'tournaments.bannerTitle': 'Win the residence tournament',
+  'tournaments.bannerBody': 'In pairs, with a bracket and champions.',
   'tournaments.open': 'Open for entries',
   'tournaments.running': 'In progress',
   'tournaments.past': 'Finished',

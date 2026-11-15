@@ -43,7 +43,7 @@ Must (not shippable without them):
 1. **Push notifications on a phone** (partial): delivery to Expo works; no phone has a token yet. Needs `eas build --profile development` and a real device. This also closes your own must "reminder when the match ends" and the tournament push notifications.
 2. **Notification settings** (partial): language, theme, sign out and delete account are done; choosing which notifications to get is not.
 3. **Profile photo** (partial): name, city, hand and side are done; upload is not (Supabase Storage, with size and type limits).
-4. **Password recovery** (partial): built with an emailed code, tested on fake data (F01-N2); not tried with a real mailbox.
+4. **Password recovery** (partial in `features.csv`): built with an emailed code, tested on fake data (F01-N2). 2026-11-15: the owner reset their password with their own mailbox on the real project, and it works.
 
 Should:
 5. Invite players by link (share a match).
@@ -89,6 +89,6 @@ Other differences:
 2. ~~**Faster score entry**~~ (behaviour fix for F04 and F09): done 2026-11-15. Each set has chips for 6-0 … 7-6 and 0-6 … 6-7; 6-3 6-2 now takes 5 taps.
 3. **Notification settings** (must): built 2026-11-15. Four switches on S14 in a private `notification_settings` table; `claim_pushes()` sends nothing for a switched-off kind. Tested in e2e and SQL. Migration `20261115000100` is applied to the real project (checked 2026-11-15).
 4. **Profile photo** (must): built 2026-11-15. Pick, square crop, 512 px JPEG, public `avatars` bucket (512 KB, images only, own folder only), set through `set_avatar()`, shown in every avatar; `delete-user` removes it. Tested in e2e and SQL. Migration applied and `delete-user` deployed (v3, checked 2026-11-15). Left: try it on a phone and on the real project.
-5. **Password recovery on the real backend** (must): "Reenviar código" added and the whole flow tested on fake data (F01-H2). Left: you try it with your own mailbox against the real project.
+5. **Password recovery on the real backend** (must): "Reenviar código" added and the whole flow tested on fake data (F01-H2). Done 2026-11-15: the owner tried it with their own mailbox on the real project (after the BUG-006 fix).
 
 After those five, every scored must-have is done and the verdict becomes "shippable". Then `/replica-entrepreneur` if you want to go beyond Playtomic, or straight to `/replica-deploy` to hand it to the residence.

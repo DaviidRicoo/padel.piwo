@@ -9,6 +9,7 @@ import { confirmedPairs } from '@/data/rules';
 import type { Tournament } from '@/data/types';
 import { useAction } from '@/data/useAction';
 import { nameOf, type People } from '@/features/matches';
+import { PhotoBanner, PLAYER_PHOTOS } from '@/features/PhotoBanner';
 import { SectionTitle } from '@/features/SectionTitle';
 import { loadTournamentPeople, pairName, tournamentStatus } from '@/features/tournaments';
 import { useI18n } from '@/i18n';
@@ -53,6 +54,7 @@ export default function TournamentsScreen() {
 
   return (
     <Screen onRefresh={q.refetch} footer={footer}>
+      <PhotoBanner title={t('tournaments.bannerTitle')} body={t('tournaments.bannerBody')} photo={PLAYER_PHOTOS.celebrate} onPress={() => router.push('/tournament/new')} />
       {invites.map(({ tour, pair }) => (
         <Invite
           key={pair.id}
