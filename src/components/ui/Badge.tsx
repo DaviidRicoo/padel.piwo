@@ -7,14 +7,15 @@ import type { IconType } from './types';
 
 export type BadgeTone = 'neutral' | 'success' | 'danger' | 'warning' | 'gold' | 'accent';
 
-const TONES: Record<BadgeTone, { bg: ColorRole | null; fg: ColorRole; border?: ColorRole }> = {
-  neutral: { bg: 'surface2', fg: 'text' },
-  success: { bg: 'success', fg: 'onSuccess' },
-  danger: { bg: 'danger', fg: 'onDanger' },
-  // warning has no filled pair that passes in both themes, so it is an outline
-  warning: { bg: null, fg: 'warning', border: 'warning' },
-  gold: { bg: 'gold', fg: 'onGold' },
-  accent: { bg: 'accent', fg: 'onAccent' },
+// Soft tints with strong text, never solid fills: quieter, and each pair is
+// checked in tokens.json "pairs" (text on its -soft role).
+const TONES: Record<BadgeTone, { bg: ColorRole; fg: ColorRole }> = {
+  neutral: { bg: 'surface2', fg: 'textMuted' },
+  success: { bg: 'successSoft', fg: 'success' },
+  danger: { bg: 'dangerSoft', fg: 'danger' },
+  warning: { bg: 'warningSoft', fg: 'warning' },
+  gold: { bg: 'goldSoft', fg: 'goldText' },
+  accent: { bg: 'accentSoft', fg: 'accentText' },
 };
 
 export interface BadgeProps {
@@ -35,14 +36,12 @@ export function Badge({ label, tone = 'neutral', icon: Icon }: BadgeProps) {
         alignItems: 'center',
         gap: t.space[1],
         paddingHorizontal: t.space[2],
-        paddingVertical: 2,
-        borderRadius: t.radius.pill,
-        backgroundColor: s.bg ? t.color[s.bg] : 'transparent',
-        borderWidth: s.border ? 1 : 0,
-        borderColor: s.border ? t.color[s.border] : undefined,
+        paddingVertical: 3,
+        borderRadius: 6,
+        backgroundColor: t.color[s.bg],
       }}>
       {Icon ? <Icon color={t.color[s.fg]} size={12} strokeWidth={2.5} /> : null}
-      <AppText variant="caption" tone={s.fg}>
+      <AppText variant="caption" tone={s.fg} style={{ fontFamily: t.type.label.fontFamily }}>
         {label}
       </AppText>
     </View>

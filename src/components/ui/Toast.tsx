@@ -28,8 +28,12 @@ export function useToast() {
   return show;
 }
 
-/** Shows one short message at a time, above the tab bar, for 3 seconds. */
-export function ToastProvider({ children, bottomOffset = 0 }: { children: ReactNode; bottomOffset?: number }) {
+/**
+ * Shows one short message at a time, under the header, for 3 seconds. It sits
+ * at the top so it never covers a screen's main action in the footer, and it
+ * lets touches through (it has no actions of its own).
+ */
+export function ToastProvider({ children }: { children: ReactNode }) {
   const t = useTheme();
   const insets = useSafeAreaInsets();
   const [message, setMessage] = useState<ToastMessage | null>(null);
@@ -60,9 +64,10 @@ export function ToastProvider({ children, bottomOffset = 0 }: { children: ReactN
       {children}
       {message ? (
         <View
-          pointerEvents="box-none"
-          style={{ position: 'absolute', left: 0, right: 0, bottom: insets.bottom + bottomOffset + t.space[3], alignItems: 'center' }}>
+          pointerEvents="none"
+          style={{ position: 'absolute', left: 0, right: 0, top: insets.top + t.layout.header + t.space[2], alignItems: 'center' }}>
           <Animated.View
+            pointerEvents="none"
             accessibilityLiveRegion="polite"
             style={{
               opacity,

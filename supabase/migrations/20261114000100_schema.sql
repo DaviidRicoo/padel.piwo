@@ -153,14 +153,36 @@ create table notifications (
   type text not null check (type in (
     'player_joined', 'join_requested', 'request_accepted', 'match_cancelled',
     'result_submitted', 'result_confirmed', 'result_disputed', 'result_reminder',
-    'tournament_pair_invite', 'tournament_pair_accepted', 'tournament_pair_withdrawn',
-    'tournament_started', 'tournament_match_ready', 'tournament_cancelled',
-    'tournament_finished', 'tournament_organizer_assigned')),
+    'tournament_pair_invite', 'tournament_pair_accepted', 'tournament_pair_declined',
+    'tournament_pair_withdrawn', 'tournament_started', 'tournament_match_ready',
+    'tournament_cancelled', 'tournament_finished', 'tournament_organizer_assigned')),
   payload jsonb not null default '{}',
+  -- filled from the payload by notifications_fill_refs(), so the app can read
+  -- what a notification is about and who caused it without parsing json
+  match_id uuid references matches(id) on delete cascade,
+  tournament_id uuid references tournaments(id) on delete cascade,
+  actor_id uuid references profiles(id) on delete set null,
   read_at timestamptz,
+  -- set by the send-push Edge Function once the push is handed to Expo
+  pushed_at timestamptz,
   created_at timestamptz not null default now()
 );
 create index on notifications (player_id, created_at desc);
+create index on notifications (match_id);
+create index on notifications (tournament_id);
+create index on notifications (actor_id);
+create index notifications_unpushed on notifications (created_at) where pushed_at is null;
+
+create function notifications_fill_refs() returns trigger language plpgsql as $$
+begin
+  new.match_id := coalesce(new.match_id, (new.payload->>'match_id')::uuid);
+  new.tournament_id := coalesce(new.tournament_id, (new.payload->>'tournament_id')::uuid);
+  new.actor_id := coalesce(new.actor_id, (new.payload->>'actor_id')::uuid);
+  return new;
+end $$;
+
+create trigger notifications_fill_refs before insert on notifications
+  for each row execute function notifications_fill_refs();
 
 create table push_tokens (
   token text primary key,
@@ -446,6 +468,32 @@ end $$;
 
 -- ---------------------------------------------------------------- RPC: matches
 
+-- Every rule of S06, checked on the server; the host takes slot 1 through the
+-- host_joins_match trigger.
+create function create_match(
+  p_starts_at timestamptz, p_duration_minutes int, p_place text, p_type text,
+  p_level_min numeric, p_level_max numeric, p_notes text default null) returns uuid
+language plpgsql security definer set search_path = public as $$
+declare v_me uuid := me(); v_id uuid;
+begin
+  if v_me is null then raise exception 'not_authenticated'; end if;
+  if p_starts_at <= now() then raise exception 'starts_in_past'; end if;
+  if char_length(trim(coalesce(p_place, ''))) not between 2 and 120 then raise exception 'invalid_place'; end if;
+  if p_duration_minutes not between 30 and 240 then raise exception 'invalid_duration'; end if;
+  if p_type not in ('friendly', 'competitive') then raise exception 'unknown'; end if;
+  if p_level_min < 1 or p_level_max > 10 or p_level_max < p_level_min then raise exception 'invalid_level_range'; end if;
+  -- spam guard: at most 5 upcoming open matches per host
+  if (select count(*) from matches
+      where host_id = v_me and status = 'open' and starts_at > now() and tournament_id is null) >= 5 then
+    raise exception 'too_many_open';
+  end if;
+  insert into matches (host_id, starts_at, duration_minutes, place, type, level_min, level_max, notes)
+    values (v_me, p_starts_at, p_duration_minutes, trim(p_place), p_type, p_level_min, p_level_max,
+            nullif(trim(coalesce(p_notes, '')), ''))
+    returning id into v_id;
+  return v_id;
+end $$;
+
 create function join_match(p_match uuid) returns text
 language plpgsql security definer set search_path = public as $$
 declare v_me uuid := me(); v_m matches; v_lvl numeric; v_slot smallint;
@@ -466,7 +514,7 @@ begin
       values (p_match, v_me, 'requested')
       on conflict (match_id, player_id) do update set status = 'requested', slot = null;
     perform notify(v_m.host_id, 'join_requested',
-      jsonb_build_object('match_id', p_match, 'player_id', v_me));
+      jsonb_build_object('match_id', p_match, 'player_id', v_me, 'actor_id', v_me));
     return 'requested';
   end if;
 
@@ -478,7 +526,7 @@ begin
       set status = 'joined', slot = v_slot, joined_at = now();
   if free_slot(p_match) is null then update matches set status = 'full' where id = p_match; end if;
   perform notify(v_m.host_id, 'player_joined',
-    jsonb_build_object('match_id', p_match, 'player_id', v_me));
+    jsonb_build_object('match_id', p_match, 'player_id', v_me, 'actor_id', v_me));
   return 'joined';
 end $$;
 
@@ -497,7 +545,7 @@ begin
     where match_id = p_match and player_id = p_player and status = 'requested';
   if not found then raise exception 'no_request'; end if;
   if free_slot(p_match) is null then update matches set status = 'full' where id = p_match; end if;
-  perform notify(p_player, 'request_accepted', jsonb_build_object('match_id', p_match));
+  perform notify(p_player, 'request_accepted', jsonb_build_object('match_id', p_match, 'actor_id', v_m.host_id));
 end $$;
 
 create function leave_match(p_match uuid) returns void
@@ -530,7 +578,7 @@ begin
   for r in select player_id from match_players
            where match_id = p_match and status = 'joined' and player_id <> v_m.host_id
   loop
-    perform notify(r.player_id, 'match_cancelled', jsonb_build_object('match_id', p_match));
+    perform notify(r.player_id, 'match_cancelled', jsonb_build_object('match_id', p_match, 'actor_id', v_m.host_id));
   end loop;
 end $$;
 
@@ -556,7 +604,7 @@ begin
   for r in select player_id from match_players
            where match_id = p_match and status = 'joined' and team <> v_team
   loop
-    perform notify(r.player_id, 'result_submitted', jsonb_build_object('match_id', p_match));
+    perform notify(r.player_id, 'result_submitted', jsonb_build_object('match_id', p_match, 'actor_id', v_me));
   end loop;
 end $$;
 
@@ -574,7 +622,7 @@ begin
   if v_team is null or v_team = v_sub_team then raise exception 'not_allowed'; end if;
 
   perform finalize_result(p_match, v_me);
-  perform notify(v_r.submitted_by, 'result_confirmed', jsonb_build_object('match_id', p_match));
+  perform notify(v_r.submitted_by, 'result_confirmed', jsonb_build_object('match_id', p_match, 'actor_id', v_me));
 end $$;
 
 create function dispute_result(p_match uuid) returns void
@@ -589,7 +637,7 @@ begin
     where match_id = p_match and player_id = v_r.submitted_by;
   if v_team is null or v_team = v_sub_team then raise exception 'not_allowed'; end if;
   update match_results set status = 'disputed' where match_id = p_match;
-  perform notify(v_r.submitted_by, 'result_disputed', jsonb_build_object('match_id', p_match));
+  perform notify(v_r.submitted_by, 'result_disputed', jsonb_build_object('match_id', p_match, 'actor_id', v_me));
 end $$;
 
 -- If the pending result has gone 7 days without the rival team confirming it,
@@ -608,7 +656,7 @@ begin
 
   perform finalize_result(p_match, v_me);
   insert into notifications (player_id, type, payload)
-    select player_id, 'result_confirmed', jsonb_build_object('match_id', p_match, 'by_host', true)
+    select player_id, 'result_confirmed', jsonb_build_object('match_id', p_match, 'by_host', true, 'actor_id', v_me)
     from match_players
     where match_id = p_match and status = 'joined' and player_id <> v_me;
 end $$;
@@ -622,10 +670,17 @@ language plpgsql security definer set search_path = public as $$
 declare v_me uuid := me(); v_id uuid;
 begin
   if v_me is null then raise exception 'not_authenticated'; end if;
+  if char_length(trim(coalesce(p_name, ''))) not between 2 and 80 then raise exception 'invalid_name'; end if;
+  if char_length(trim(coalesce(p_place, ''))) not between 2 and 120 then raise exception 'invalid_place'; end if;
   if p_players not in (8, 16, 32) then raise exception 'invalid_size'; end if;
   if p_starts_at <= now() then raise exception 'starts_in_past'; end if;
+  -- spam guard: at most 2 tournaments taking entries per organizer
+  if (select count(*) from tournaments where organizer_id = v_me and status = 'registration') >= 2 then
+    raise exception 'too_many_open';
+  end if;
   insert into tournaments (organizer_id, name, description, place, starts_at, max_pairs, round_days)
-    values (v_me, trim(p_name), p_description, trim(p_place), p_starts_at, p_players / 2, p_round_days)
+    values (v_me, trim(p_name), nullif(trim(coalesce(p_description, '')), ''), trim(p_place), p_starts_at,
+            p_players / 2, least(30, greatest(1, p_round_days)))
     returning id into v_id;
   return v_id;
 end $$;
@@ -651,7 +706,7 @@ begin
   insert into tournament_pairs (tournament_id, player1_id, player2_id)
     values (p_tournament, v_me, p_partner) returning id into v_id;
   perform notify(p_partner, 'tournament_pair_invite',
-    jsonb_build_object('tournament_id', p_tournament, 'pair_id', v_id, 'from', v_me));
+    jsonb_build_object('tournament_id', p_tournament, 'pair_id', v_id, 'actor_id', v_me));
   return v_id;
 end $$;
 
@@ -669,8 +724,8 @@ begin
 
   if not p_accept then
     update tournament_pairs set status = 'withdrawn' where id = p_pair;
-    perform notify(v_p.player1_id, 'tournament_pair_accepted',
-      jsonb_build_object('tournament_id', v_t.id, 'pair_id', p_pair, 'accepted', false));
+    perform notify(v_p.player1_id, 'tournament_pair_declined',
+      jsonb_build_object('tournament_id', v_t.id, 'pair_id', p_pair, 'actor_id', v_me));
     return;
   end if;
 
@@ -679,7 +734,7 @@ begin
   if v_n >= v_t.max_pairs then raise exception 'tournament_full'; end if;
   update tournament_pairs set status = 'confirmed' where id = p_pair;
   perform notify(v_p.player1_id, 'tournament_pair_accepted',
-    jsonb_build_object('tournament_id', v_t.id, 'pair_id', p_pair, 'accepted', true));
+    jsonb_build_object('tournament_id', v_t.id, 'pair_id', p_pair, 'actor_id', v_me));
   if v_n + 1 = v_t.max_pairs then perform draw_tournament(v_t.id); end if;
 end $$;
 
@@ -699,7 +754,7 @@ begin
   update tournament_pairs set status = 'withdrawn' where id = p_pair;
   perform notify(case when v_me = v_p.player1_id then v_p.player2_id else v_p.player1_id end,
     'tournament_pair_withdrawn',
-    jsonb_build_object('tournament_id', v_t.id, 'pair_id', p_pair));
+    jsonb_build_object('tournament_id', v_t.id, 'pair_id', p_pair, 'actor_id', v_me));
 end $$;
 
 create function cancel_tournament(p_tournament uuid) returns void
@@ -715,7 +770,7 @@ begin
     where tournament_id = p_tournament and status in ('open', 'full');
   insert into notifications (player_id, type, payload)
     select unnest(array[player1_id, player2_id]), 'tournament_cancelled',
-           jsonb_build_object('tournament_id', p_tournament)
+           jsonb_build_object('tournament_id', p_tournament, 'actor_id', v_t.organizer_id)
     from tournament_pairs where tournament_id = p_tournament and status in ('pending', 'confirmed');
 end $$;
 
@@ -802,7 +857,31 @@ language sql security definer set search_path = public as $$
   select count(*)::int from ins
 $$;
 
--- On Supabase, schedule both (pg_cron):
+-- Hands out unsent notifications to the send-push Edge Function, each one exactly
+-- once: rows are claimed (pushed_at set) in the same statement that reads them,
+-- and locked rows are skipped, so two runs never push the same notification.
+create function claim_pushes(p_limit int default 100)
+returns table (id uuid, player_id uuid, type text, match_id uuid, tournament_id uuid,
+               actor_name text, locale text, tokens text[])
+language sql security definer set search_path = public as $$
+  with claimed as (
+    update notifications n set pushed_at = now()
+    where n.id in (
+      select x.id from notifications x
+      where x.pushed_at is null and x.created_at > now() - interval '1 day'
+      order by x.created_at
+      limit p_limit
+      for update skip locked)
+    returning n.*
+  )
+  select c.id, c.player_id, c.type, c.match_id, c.tournament_id, a.display_name, p.locale,
+         array(select t.token from push_tokens t where t.player_id = c.player_id)
+  from claimed c
+  join profiles p on p.id = c.player_id
+  left join profiles a on a.id = c.actor_id
+$$;
+
+-- The jobs are scheduled in the next migration (20261114000200_schedules.sql):
 --   select cron.schedule('result-reminders', '*/5 * * * *', 'select send_result_reminders()');
 --   select cron.schedule('confirm-followups', '0 9 * * *', 'select send_confirm_followups()');
 
@@ -920,8 +999,7 @@ create policy read_all on tournament_ties for select to authenticated using (tru
 -- direct writes allowed from the app
 create policy edit_own on profiles for update to authenticated
   using (auth_id = auth.uid()) with check (auth_id = auth.uid());
-create policy create_own on matches for insert to authenticated
-  with check (host_id = me() and status = 'open' and tournament_id is null);
+-- matches are created only through create_match(), which validates every field
 create policy follow on follows for insert to authenticated with check (follower_id = me());
 create policy unfollow on follows for delete to authenticated using (follower_id = me());
 create policy own_notifications on notifications for select to authenticated
@@ -950,6 +1028,11 @@ revoke all on function advance_tournament(uuid) from public, anon, authenticated
 revoke all on function send_result_reminders() from public, anon, authenticated;
 revoke all on function send_confirm_followups() from public, anon, authenticated;
 
+revoke all on function notifications_fill_refs() from public, anon, authenticated;
+-- only the service role (the send-push Edge Function) may claim pushes
+revoke all on function claim_pushes(int) from public, anon, authenticated;
+revoke all on function create_match(timestamptz, int, text, text, numeric, numeric, text) from public, anon;
+grant execute on function create_match(timestamptz, int, text, text, numeric, numeric, text) to authenticated;
 revoke all on function join_match(uuid) from public, anon;
 revoke all on function accept_request(uuid, uuid) from public, anon;
 revoke all on function leave_match(uuid) from public, anon;

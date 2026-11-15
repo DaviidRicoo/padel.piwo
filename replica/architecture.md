@@ -16,11 +16,11 @@ Scope: Android and iOS app for one community, the user's residence in Gdańsk. L
 | payments, email | none | out of scope; Supabase sends the auth emails |
 | hosting | Supabase (backend), EAS (builds) | nothing else to run |
 
-One database, no microservices. The app talks to Supabase directly; the rules that matter live in SQL functions (`replica/schema.sql`), so a modified client cannot break them.
+One database, no microservices. The app talks to Supabase directly; the rules that matter live in SQL functions (`supabase/migrations/20261114000100_schema.sql`), so a modified client cannot break them.
 
 ## Schema
 
-Tables: 12 (`profiles`, `matches`, `match_players`, `match_results`, `set_scores`, `rating_changes`, `follows`, `notifications`, `push_tokens`, `tournaments`, `tournament_pairs`, `tournament_ties`), one view (`player_match_results`) and the function `ranking(since)`. Access rules: row level security on every table. Members read community data; writes go through security definer functions, with a few direct writes (create a normal match, follow, own notifications and push tokens, own profile columns). Users cannot edit their own level, and cannot insert a match that belongs to a tournament. Full SQL in `replica/schema.sql`.
+Tables: 12 (`profiles`, `matches`, `match_players`, `match_results`, `set_scores`, `rating_changes`, `follows`, `notifications`, `push_tokens`, `tournaments`, `tournament_pairs`, `tournament_ties`), one view (`player_match_results`) and the function `ranking(since)`. Access rules: row level security on every table. Members read community data; writes go through security definer functions, with a few direct writes (create a normal match, follow, own notifications and push tokens, own profile columns). Users cannot edit their own level, and cannot insert a match that belongs to a tournament. Full SQL in `supabase/migrations/20261114000100_schema.sql`.
 
 Single community, so no group or club table. The ranking is one list for everyone, and tournament matches count in it because they are competitive matches.
 
@@ -32,12 +32,13 @@ Everything uses the Supabase client with the member's session. `rpc` means a SQL
 
 | method path | does | who | input | output | flow |
 | --- | --- | --- | --- | --- | --- |
-| auth.signUp | create account (email, password, `display_name`, `locale` in metadata); signup is open | anyone | those fields | session | F01 |
+| auth.signUp | create account (email, password, `display_name`, `locale` in metadata); signup is open; a 6-digit code is emailed | anyone | those fields | no session until confirmed | F01 |
+| auth.verifyOtp (signup) / auth.resend | confirm the email with the code; resend it | anyone | email, code | session | F01 |
 | auth.signInWithPassword | log in | anyone | email, password | session | F01 |
-| auth.resetPasswordForEmail | send reset link | anyone | email | none | F01 |
-| auth.signOut | log out | member | none | none | F06 |
+| auth.resetPasswordForEmail, then auth.verifyOtp (recovery) + auth.updateUser | reset the password with an emailed code | anyone | email, code, new password | session | F01 |
+| auth.signOut (local or global) | log out here, or on every device | member | none | none | F06 |
 | select matches (+ players) where status open, tournament_id is null, starts_at > now | list open matches (S05) | member | filters | matches | F03 |
-| insert matches | create a match; trigger puts the host in slot 1 | member | place, starts_at, duration_minutes, type, level range, notes | match | F02 |
+| rpc create_match | create a match after checking every field on the server; at most 5 upcoming open matches per host; trigger puts the host in slot 1 | member | starts_at, duration_minutes, place, type, level range, notes | match id | F02 |
 | select matches by id (+ players, result, sets) | match detail (S07) | member | id | match | F03 F04 F09 |
 | rpc join_match | take a slot, or request one if out of level range | member | match id | `joined` or `requested` | F03 |
 | rpc accept_request | host accepts a request | host | match id, player id | none | F03 |
@@ -65,15 +66,18 @@ Everything uses the Supabase client with the member's session. `rpc` means a SQL
 | rpc organizer_set_result | organizer settles a tournament match when pairs dispute or do not answer | organizer | match id, sets | none | F09 |
 | rpc reschedule_match | a pair moves the date of its tournament match; the reminder moves too | pair member | match id, new date | none | F09 |
 
-Client-callable functions: 17. Internal ones (not callable by the app): `notify`, `free_slot`, `apply_ratings`, `save_sets`, `finalize_result`, `create_tie_match`, `draw_tournament`, `advance_tournament`, `send_result_reminders`, `send_confirm_followups`.
+Client-callable functions: 18 (with `create_match`). Internal ones (not callable by the app): `notify`, `notifications_fill_refs`, `free_slot`, `apply_ratings`, `save_sets`, `finalize_result`, `create_tie_match`, `draw_tournament`, `advance_tournament`, `send_result_reminders`, `send_confirm_followups`, `claim_pushes` (service role only). Writes go only through functions: there is no insert policy on any table except `follows` and `push_tokens`.
 
-Webhooks in: none. Webhooks out: database webhook on `notifications` insert, calling an Edge Function that sends the Expo push.
+Webhooks in: none. Webhooks out: none. Pushes go out through a `pg_cron` job that calls the `send-push` Edge Function (below), not through a database webhook, so no secret key ever leaves Vault.
 
-Jobs:
+Jobs (migration `supabase/migrations/20261114000200_schedules.sql`):
 - `send_result_reminders()`, `pg_cron` every 5 minutes: when a match ends (`starts_at` plus `duration_minutes`) it inserts one `result_reminder` for each of its players. One reminder per match, and `result_reminded_at` guards against repeats. The push text depends on state: "enter the result" if there is none, "confirm the result" if one is pending.
-- `send_confirm_followups()`, `pg_cron` daily: if a submitted result is still unconfirmed after 24 hours, one more reminder to the rival team.
-- `send-push`: Edge Function triggered by each new notification; sends the push in the player's language.
-- `delete-user`: Edge Function with the service role, deletes the auth user after `delete_account`.
+- `send_confirm_followups()`, `pg_cron` daily at 09:00 UTC: if a submitted result is still unconfirmed after 24 hours, one more reminder to the rival team.
+- `send-push`:
+  - **When:** `pg_cron` runs every minute, and only calls the Edge Function `supabase/functions/send-push` when some notification is unsent.
+  - **Auth:** the call carries the `x-cron-secret` header, read from Vault.
+  - **What it does:** `claim_pushes()` hands out each notification exactly once, by setting `pushed_at` in the same statement that reads it. The function then sends to Expo's push service in the player's language, and deletes the tokens of uninstalled apps.
+- `delete-user`: Edge Function called by the app with the player's session. It runs `delete_account()` as the player, then deletes the login with the admin API.
 
 ## The parts that bite
 

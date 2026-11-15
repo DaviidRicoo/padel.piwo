@@ -7,7 +7,7 @@ import { useTheme } from '@/theme';
 import { AppText } from './AppText';
 import { initials } from './types';
 
-export type AvatarSize = 24 | 32 | 40 | 56 | 88;
+export type AvatarSize = 24 | 32 | 36 | 40 | 56 | 88;
 
 export interface AvatarProps {
   name: string;

@@ -223,7 +223,7 @@ export default function DesignScreen() {
               { a: 4, b: 6 },
               { a: 10, b: 8 },
             ]}
-            result={{ won: true, label: 'Victoria' }}
+            resultBadge={{ label: 'Victoria', tone: 'success' }}
             onPress={() => {}}
           />
           <MatchCard

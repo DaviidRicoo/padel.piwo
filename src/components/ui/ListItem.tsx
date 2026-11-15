@@ -4,8 +4,12 @@ import { Platform, Pressable, Switch, View } from 'react-native';
 import { useTheme } from '@/theme';
 
 import { AppText } from './AppText';
-import { useFocusRing } from './focus';
+import { spaceToPress, useFocusRing } from './focus';
 import type { IconType } from './types';
+
+/** width of the icon tile; a Group of icon rows insets its hairlines by tile + gaps */
+export const ICON_TILE = 32;
+export const ICON_ROW_INSET = 16 + ICON_TILE + 12;
 
 type Trailing = { kind: 'chevron' } | { kind: 'value'; text: string } | { kind: 'switch'; value: boolean } | { kind: 'none' };
 
@@ -29,9 +33,11 @@ export function ListItem({ title, subtitle, icon: Icon, trailing = { kind: 'chev
     <Pressable
       accessibilityRole={isSwitch ? 'switch' : 'button'}
       accessibilityLabel={subtitle ? `${title}, ${subtitle}` : title}
-      accessibilityState={{ disabled: !!disabled, checked: isSwitch ? trailing.value : undefined }}
+      aria-disabled={!!disabled}
+      aria-checked={isSwitch ? trailing.value : undefined}
       disabled={disabled}
       onPress={onPress}
+      {...(isSwitch ? spaceToPress(onPress, disabled) : {})}
       {...focus.handlers}
       style={({ pressed }) => [
         {
@@ -46,7 +52,19 @@ export function ListItem({ title, subtitle, icon: Icon, trailing = { kind: 'chev
         },
         focus.ring,
       ]}>
-      {Icon ? <Icon color={t.color[fg]} size={20} /> : null}
+      {Icon ? (
+        <View
+          style={{
+            width: ICON_TILE,
+            height: ICON_TILE,
+            borderRadius: t.radius.sm,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: tone === 'danger' ? t.color.dangerSoft : t.color.accentSoft,
+          }}>
+          <Icon color={tone === 'danger' ? t.color.danger : t.color.accentText} size={18} strokeWidth={2} />
+        </View>
+      ) : null}
       <View style={{ flex: 1 }}>
         <AppText tone={fg}>{title}</AppText>
         {subtitle ? (
@@ -62,16 +80,27 @@ export function ListItem({ title, subtitle, icon: Icon, trailing = { kind: 'chev
         </AppText>
       ) : null}
       {trailing.kind === 'switch' ? (
-        <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none">
-          <Switch
-            value={trailing.value}
-            trackColor={{ true: t.color.accent, false: t.color.borderInput }}
-            thumbColor={t.color.bg}
-            ios_backgroundColor={t.color.borderInput}
-            // react-native-web ignores thumbColor when on and paints its own teal
-            {...(Platform.OS === 'web' ? ({ activeThumbColor: t.color.bg } as object) : {})}
-          />
-        </View>
+        Platform.OS === 'web' ? (
+          // react-native-web's Switch is an unlabeled <input> inside this row, which is
+          // already the switch: two nested controls. On the web the track is only drawn.
+          <View
+            aria-hidden
+            style={{
+              width: 40,
+              height: 24,
+              borderRadius: 12,
+              padding: 2,
+              justifyContent: 'center',
+              alignItems: trailing.value ? 'flex-end' : 'flex-start',
+              backgroundColor: trailing.value ? t.color.accent : t.color.borderInput,
+            }}>
+            <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: t.color.bg }} />
+          </View>
+        ) : (
+          <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none">
+            <Switch value={trailing.value} trackColor={{ true: t.color.accent, false: t.color.borderInput }} thumbColor={t.color.bg} ios_backgroundColor={t.color.borderInput} />
+          </View>
+        )
       ) : null}
     </Pressable>
   );

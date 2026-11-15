@@ -19,6 +19,8 @@ export interface Theme {
   layout: typeof tokens.layout;
   opacity: typeof tokens.opacity;
   motion: typeof tokens.motion;
+  /** press feedback: pressable surfaces shrink a little, Apple-style */
+  scale: typeof tokens.scale;
   shadow: (level: keyof typeof tokens.shadow) => { boxShadow: string };
   /** a colour role at an alpha, for scrims and shadows */
   alpha: (role: ColorRole, alpha: number) => string;
@@ -34,7 +36,7 @@ export function hexToRgba(hex: string, alpha: number): string {
 const typeStyles = Object.fromEntries(
   Object.entries(tokens.type).map(([name, t]) => [
     name,
-    { fontFamily: fontFamily(t.family, t.weight), fontSize: t.size, lineHeight: t.line },
+    { fontFamily: fontFamily(t.family, t.weight), fontSize: t.size, lineHeight: t.line, letterSpacing: t.tracking },
   ]),
 ) as Record<TypeVariant, TextStyle>;
 
@@ -54,6 +56,7 @@ function buildTheme(name: ThemeName, mode: ThemeMode, setMode: (m: ThemeMode) =>
     layout: tokens.layout,
     opacity: tokens.opacity,
     motion: tokens.motion,
+    scale: tokens.scale,
     alpha,
     shadow: (level) => {
       const s = tokens.shadow[level];

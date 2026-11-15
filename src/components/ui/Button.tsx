@@ -50,7 +50,8 @@ export function Button({
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
-      accessibilityState={{ disabled: !!inactive, busy: loading }}
+      aria-disabled={!!inactive}
+      aria-busy={!!loading}
       disabled={inactive}
       hitSlop={size === 'sm' ? (t.layout.touchMin - height) / 2 : undefined}
       {...focus.handlers}
@@ -58,8 +59,11 @@ export function Button({
       style={({ pressed }) => [
         {
           height,
-          paddingHorizontal: size === 'sm' ? t.space[3] : t.space[5],
-          borderRadius: t.radius.md,
+          paddingHorizontal: size === 'sm' ? t.space[4] : t.space[6],
+          // the pill is the action shape; cards and fields keep the rounded rectangle
+          borderRadius: t.radius.pill,
+          // always an array: going from a transform to undefined crashes React Native on phones
+          transform: [{ scale: pressed && !inactive ? t.scale.pressed : 1 }],
           backgroundColor: v.bg ? t.color[v.bg] : 'transparent',
           borderWidth: v.border ? 1 : 0,
           borderColor: v.border ? t.color[v.border] : undefined,

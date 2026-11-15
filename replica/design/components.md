@@ -157,10 +157,37 @@ ConfirmDialog
 ```
 Toast
   tones     info (accent / on-accent), success (success / on-success), error (danger / on-danger)
-  comport.  abajo, por encima de la barra de pestañas, se cierra solo a los 3 s,
-            no tapa botones
+  comport.  arriba, bajo la cabecera, se cierra solo a los 3 s. Deja pasar los toques.
+            Antes iba abajo, pero tapaba el botón principal del pie de pantalla
+            (encontrado en /replica-build, tanda 2).
   a11y      se anuncia con AccessibilityInfo.announceForAccessibility
   usado en  todas (confirmaciones y errores de red)
+```
+
+```
+Stepper   (añadido en /replica-build)
+  qué es    número con botones − y +; mínimo, máximo, paso y formato (4,5)
+  states    normal, en el límite (botón deshabilitado), error (borde danger)
+  a11y      un único elemento accessibilityRole="adjustable" con increment y decrement;
+            los botones no son paradas separadas
+  usado en  S06 (nivel mínimo y máximo), S08 (vía SetScoreRow)
+```
+
+```
+ChipGroup   (añadido en /replica-build)
+  qué es    elegir una opción entre muchas: fila con scroll (días) o rejilla (horas)
+  states    seleccionado (accent / on-accent), normal (surface), pulsado, deshabilitado (hora pasada)
+  a11y      radiogroup; cada chip es un radio con checked
+  usado en  S06 (día y hora). Sustituye al selector nativo de fecha: funciona igual en web y móvil.
+```
+
+```
+Screen, LoadingCards, ErrorState   (añadidos en /replica-build)
+  Screen    pantalla con scroll, centrada y con ancho máximo max-content; tirar para recargar;
+            pie fijo opcional para la acción principal
+  Loading   tarjetas Skeleton mientras carga una lista (nunca un spinner a pantalla completa)
+  Error     EmptyState con "Reintentar"
+  usado en  todas las pantallas
 ```
 
 ## Componentes de la app

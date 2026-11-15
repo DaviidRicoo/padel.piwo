@@ -42,5 +42,26 @@ example
 /ios
 /android
 
+# Playwright output (screenshots, traces, the HTML report)
+/e2e/results
+/e2e/report
+/test-results
+/.playwright-cli
+
 # Claude Code local settings (per machine)
 .claude/settings.local.json
+
+# secrets: keys live in .env.local (app) and supabase/.env (CLI); never commit any of these
+.env
+.env.*
+supabase/.env
+supabase/.env.*
+*.keystore
+# EAS local credentials, and the Firebase files for Android/iOS push
+credentials.json
+credentials/
+google-services.json
+GoogleService-Info.plist
+# database dumps hold residents' personal data (replica/backend.md, "copias de seguridad")
+backup*.sql
+*.dump

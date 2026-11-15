@@ -1,13 +1,17 @@
 import { CircleCheck, Trophy } from 'lucide-react-native';
-import { ScrollView, View } from 'react-native';
+import type { ReactNode } from 'react';
+import { Pressable, ScrollView, View } from 'react-native';
 
 import { AppText, Badge } from '@/components/ui';
+import { useFocusRing } from '@/components/ui/focus';
 import { useTheme } from '@/theme';
 
 import { ScoreLine, type SetScore } from './ScoreLine';
 
 export interface BracketTie {
   id: string;
+  /** the tie's match, once both pairs are known; makes the tie pressable */
+  matchId?: string;
   /** "Ana / Luis"; undefined while the previous round is still being played */
   a?: string;
   b?: string;
@@ -27,6 +31,8 @@ export interface BracketProps {
   tbdLabel?: string;
   versusWord?: string;
   winsWord?: string;
+  /** opens a tie's match */
+  onPressTie?: (tie: BracketTie) => void;
 }
 
 const COLUMN = 200;
@@ -36,7 +42,7 @@ const SLOT = 104; // vertical room for one first-round tie
  * Single-elimination bracket, one column per round, scrolled sideways. Each
  * round's ties are centred between the two ties that feed them.
  */
-export function Bracket({ rounds, champion, championLabel = 'Campeones', tbdLabel = 'Por decidir', versusWord = 'contra', winsWord = 'ganan' }: BracketProps) {
+export function Bracket({ rounds, champion, championLabel = 'Campeones', tbdLabel = 'Por decidir', versusWord = 'contra', winsWord = 'ganan', onPressTie }: BracketProps) {
   const t = useTheme();
   const height = (rounds[0]?.ties.length ?? 1) * SLOT;
   return (
@@ -53,22 +59,14 @@ export function Bracket({ rounds, champion, championLabel = 'Campeones', tbdLabe
               const score = tie.sets ? tie.sets.map((s) => `${s.a}-${s.b}`).join(' ') : '';
               const won = tie.winner ? `, ${winsWord} ${tie.winner === 'a' ? a : b}` : '';
               return (
-                <View
+                <TieBox
                   key={tie.id}
-                  accessible
-                  accessibilityLabel={`${round.title} ${i + 1}: ${a} ${versusWord} ${b}${score ? `, ${score}` : ''}${won}`}
-                  style={{
-                    gap: t.space[1],
-                    padding: t.space[3],
-                    borderRadius: t.radius.md,
-                    borderWidth: 1,
-                    borderColor: t.color.border,
-                    backgroundColor: t.color.surface,
-                  }}>
+                  label={`${round.title} ${i + 1}: ${a} ${versusWord} ${b}${score ? `, ${score}` : ''}${won}`}
+                  onPress={onPressTie && tie.matchId ? () => onPressTie(tie) : undefined}>
                   <Side name={tie.a} tbd={tbdLabel} winner={tie.winner === 'a'} />
                   <Side name={tie.b} tbd={tbdLabel} winner={tie.winner === 'b'} />
                   {tie.sets ? <ScoreLine sets={tie.sets} variant="caption" /> : null}
-                </View>
+                </TieBox>
               );
             })}
           </View>
@@ -93,6 +91,29 @@ export function Bracket({ rounds, champion, championLabel = 'Campeones', tbdLabe
         </View>
       </View>
     </ScrollView>
+  );
+}
+
+function TieBox({ label, onPress, children }: { label: string; onPress?: () => void; children: ReactNode }) {
+  const t = useTheme();
+  const focus = useFocusRing();
+  const box = { gap: t.space[1], padding: t.space[3], borderRadius: t.radius.md, backgroundColor: t.color.surface };
+  if (!onPress) {
+    return (
+      <View accessible accessibilityLabel={label} style={box}>
+        {children}
+      </View>
+    );
+  }
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      onPress={onPress}
+      {...focus.handlers}
+      style={({ pressed }) => [box, pressed ? { backgroundColor: t.color.surface2 } : null, focus.ring]}>
+      {children}
+    </Pressable>
   );
 }
 

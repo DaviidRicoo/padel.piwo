@@ -3,7 +3,7 @@ import { Pressable, View } from 'react-native';
 import { useTheme } from '@/theme';
 
 import { AppText } from './AppText';
-import { useFocusRing } from './focus';
+import { spaceToPress, useFocusRing } from './focus';
 
 export interface SegmentedOption<T extends string> {
   value: T;
@@ -30,9 +30,7 @@ export function SegmentedControl<T extends string>({ options, value, onChange, a
         padding: t.space[1],
         gap: t.space[1],
         borderRadius: t.radius.pill,
-        backgroundColor: t.color.surface,
-        borderWidth: 1,
-        borderColor: t.color.border,
+        backgroundColor: t.color.surface2,
         opacity: disabled ? t.opacity.disabled : 1,
       }}>
       {options.map((o) => (
@@ -49,10 +47,12 @@ function Segment({ label, selected, disabled, onPress }: { label: string; select
     <Pressable
       accessibilityRole="radio"
       accessibilityLabel={label}
-      accessibilityState={{ checked: selected, disabled: !!disabled }}
+      aria-checked={selected}
+      aria-disabled={!!disabled}
       disabled={disabled}
       onPress={onPress}
       hitSlop={4}
+      {...spaceToPress(onPress, disabled)}
       {...focus.handlers}
       style={({ pressed }) => [
         {
@@ -62,11 +62,12 @@ function Segment({ label, selected, disabled, onPress }: { label: string; select
           alignItems: 'center',
           justifyContent: 'center',
           borderRadius: t.radius.pill,
-          backgroundColor: selected ? t.color.accent : pressed ? t.color.surface2 : 'transparent',
+          backgroundColor: selected ? t.color.accent : pressed ? t.color.border : 'transparent',
         },
         focus.ring,
       ]}>
-      <AppText variant="label" tone={selected ? 'onAccent' : 'textMuted'} numberOfLines={1}>
+      {/* up to two lines: with four options a label like "Sin indicar" would otherwise be cut */}
+      <AppText variant="label" tone={selected ? 'onAccent' : 'textMuted'} numberOfLines={2} align="center">
         {label}
       </AppText>
     </Pressable>

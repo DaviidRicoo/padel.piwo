@@ -5,6 +5,9 @@ import { AppText, Avatar, LevelChip } from '@/components/ui';
 import { useFocusRing } from '@/components/ui/focus';
 import { useTheme } from '@/theme';
 
+/** where a Group of player rows starts its hairlines: row padding + avatar + gap */
+export const PLAYER_ROW_INSET = 16 + 40 + 12;
+
 export interface PlayerRowProps {
   name: string;
   uri?: string | null;
@@ -25,7 +28,8 @@ export function PlayerRow({ name, uri, level, selectable, selected, disabled, di
     <Pressable
       accessibilityRole={selectable ? 'radio' : 'button'}
       accessibilityLabel={[name, disabled ? disabledLabel : null].filter(Boolean).join(', ')}
-      accessibilityState={{ disabled: !!disabled, checked: selectable ? !!selected : undefined }}
+      aria-disabled={!!disabled}
+      aria-checked={selectable ? !!selected : undefined}
       disabled={disabled}
       onPress={onPress}
       {...focus.handlers}

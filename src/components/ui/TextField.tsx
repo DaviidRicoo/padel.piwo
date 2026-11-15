@@ -40,6 +40,8 @@ export function TextField({
   const borderWidth = focused || error ? 2 : 1;
   const borderColor = error ? t.color.danger : focused ? t.color.focus : t.color.borderInput;
   const iconColor = t.color.textMuted;
+  // no autocorrect or spellcheck on emails, passwords and codes: it only gets in the way
+  const literal = variant === 'password' || rest.keyboardType === 'email-address' || rest.keyboardType === 'number-pad';
 
   return (
     <View style={{ gap: t.space[1], opacity: disabled ? t.opacity.disabled : 1 }}>
@@ -52,7 +54,7 @@ export function TextField({
           borderWidth,
           borderColor,
           borderRadius: t.radius.md,
-          backgroundColor: t.color.bg,
+          backgroundColor: t.color.surface,
           // keep the text in place when the border thickens on focus
           paddingHorizontal: t.space[3] - (borderWidth - 1),
           gap: t.space[2],
@@ -69,6 +71,8 @@ export function TextField({
           placeholderTextColor={t.color.textMuted}
           selectionColor={t.color.accentText}
           maxFontSizeMultiplier={1.6}
+          autoCorrect={literal ? false : undefined}
+          spellCheck={literal ? false : undefined}
           onFocus={(e) => {
             setFocused(true);
             onFocus?.(e);

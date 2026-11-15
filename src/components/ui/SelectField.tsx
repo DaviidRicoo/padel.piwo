@@ -30,7 +30,7 @@ export function SelectField({ label, value, placeholder, helper, error, disabled
         accessibilityRole="button"
         accessibilityLabel={`${label}: ${value ?? placeholder ?? ''}`}
         accessibilityHint={error ?? helper}
-        accessibilityState={{ disabled: !!disabled }}
+        aria-disabled={!!disabled}
         disabled={disabled}
         onPress={onPress}
         {...focus.handlers}

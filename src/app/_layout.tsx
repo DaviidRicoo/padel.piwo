@@ -5,6 +5,8 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo } from 'react';
 
 import { ToastProvider } from '@/components/ui';
+import { ApiProvider, useAuthReady, useUserId } from '@/data/provider';
+import { I18nProvider } from '@/i18n';
 import { AppThemeProvider, useTheme } from '@/theme';
 import { fontAssets } from '@/theme/fonts';
 
@@ -13,22 +15,31 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const [loaded, error] = useFonts(fontAssets);
 
-  useEffect(() => {
-    if (loaded || error) SplashScreen.hideAsync();
-  }, [loaded, error]);
-
+  // the splash stays up until fonts are in and the stored session has been read
+  // (ThemedNavigation hides it), so a signed-in player never sees the sign-in screen flash
   if (!loaded && !error) return null;
 
   return (
     <AppThemeProvider>
-      <ThemedNavigation />
+      <I18nProvider>
+        <ApiProvider>
+          <ThemedNavigation />
+        </ApiProvider>
+      </I18nProvider>
     </AppThemeProvider>
   );
 }
 
-/** Feeds our tokens into the navigation theme, so headers and screen backgrounds follow light and dark. */
+/** Feeds our tokens into the navigation theme, and shows the app or the sign-in screens. */
 function ThemedNavigation() {
   const t = useTheme();
+  const userId = useUserId();
+  const ready = useAuthReady();
+
+  useEffect(() => {
+    if (ready) SplashScreen.hideAsync();
+  }, [ready]);
+
   const navTheme = useMemo(() => {
     const base = t.name === 'dark' ? DarkTheme : DefaultTheme;
     return {
@@ -45,19 +56,19 @@ function ThemedNavigation() {
     };
   }, [t]);
 
+  if (!ready) return null;
+
   return (
     <ThemeProvider value={navTheme}>
       <StatusBar style={t.name === 'dark' ? 'light' : 'dark'} />
       <ToastProvider>
-        <Stack
-          screenOptions={{
-            headerStyle: { backgroundColor: t.color.surface },
-            headerTintColor: t.color.accentText,
-            headerTitleStyle: { fontFamily: t.type.heading.fontFamily, color: t.color.text },
-            contentStyle: { backgroundColor: t.color.bg },
-          }}>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="design" options={{ title: 'Sistema de diseño' }} />
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.color.bg } }}>
+          <Stack.Protected guard={!!userId}>
+            <Stack.Screen name="(app)" />
+          </Stack.Protected>
+          <Stack.Protected guard={!userId}>
+            <Stack.Screen name="(auth)" />
+          </Stack.Protected>
         </Stack>
       </ToastProvider>
     </ThemeProvider>
