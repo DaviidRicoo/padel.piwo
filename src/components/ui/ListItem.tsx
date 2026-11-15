@@ -4,7 +4,7 @@ import { Platform, Pressable, Switch, View } from 'react-native';
 import { useTheme } from '@/theme';
 
 import { AppText } from './AppText';
-import { useFocusRing } from './focus';
+import { spaceToPress, useFocusRing } from './focus';
 import type { IconType } from './types';
 
 /** width of the icon tile; a Group of icon rows insets its hairlines by tile + gaps */
@@ -37,6 +37,7 @@ export function ListItem({ title, subtitle, icon: Icon, trailing = { kind: 'chev
       aria-checked={isSwitch ? trailing.value : undefined}
       disabled={disabled}
       onPress={onPress}
+      {...(isSwitch ? spaceToPress(onPress, disabled) : {})}
       {...focus.handlers}
       style={({ pressed }) => [
         {
@@ -79,16 +80,27 @@ export function ListItem({ title, subtitle, icon: Icon, trailing = { kind: 'chev
         </AppText>
       ) : null}
       {trailing.kind === 'switch' ? (
-        <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none">
-          <Switch
-            value={trailing.value}
-            trackColor={{ true: t.color.accent, false: t.color.borderInput }}
-            thumbColor={t.color.bg}
-            ios_backgroundColor={t.color.borderInput}
-            // react-native-web ignores thumbColor when on and paints its own teal
-            {...(Platform.OS === 'web' ? ({ activeThumbColor: t.color.bg } as object) : {})}
-          />
-        </View>
+        Platform.OS === 'web' ? (
+          // react-native-web's Switch is an unlabeled <input> inside this row, which is
+          // already the switch: two nested controls. On the web the track is only drawn.
+          <View
+            aria-hidden
+            style={{
+              width: 40,
+              height: 24,
+              borderRadius: 12,
+              padding: 2,
+              justifyContent: 'center',
+              alignItems: trailing.value ? 'flex-end' : 'flex-start',
+              backgroundColor: trailing.value ? t.color.accent : t.color.borderInput,
+            }}>
+            <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: t.color.bg }} />
+          </View>
+        ) : (
+          <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none">
+            <Switch value={trailing.value} trackColor={{ true: t.color.accent, false: t.color.borderInput }} thumbColor={t.color.bg} ios_backgroundColor={t.color.borderInput} />
+          </View>
+        )
       ) : null}
     </Pressable>
   );

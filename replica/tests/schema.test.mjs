@@ -31,10 +31,24 @@ await db.exec(`
   grant usage on schema public, auth to anon, authenticated;
   alter default privileges in schema public grant all on tables to anon, authenticated;
   alter default privileges in schema public grant all on functions to anon, authenticated;
+  -- Supabase Storage's tables, reduced to the columns the migrations use
+  create schema storage;
+  create table storage.buckets (id text primary key, name text not null, public boolean not null default false,
+    file_size_limit bigint, allowed_mime_types text[]);
+  create table storage.objects (id uuid primary key default gen_random_uuid(),
+    bucket_id text references storage.buckets(id), name text not null, unique (bucket_id, name));
+  alter table storage.objects enable row level security;
+  create function storage.foldername(name text) returns text[] language sql immutable as
+    $$ select (string_to_array(name, '/'))[1:array_length(string_to_array(name, '/'), 1) - 1] $$;
+  grant usage on schema storage to anon, authenticated;
+  grant all on storage.objects to authenticated;
+  grant select on storage.buckets to anon, authenticated;
 `);
 await db.exec(schema);
 // the advisors' fixes (migration 3); migration 2 needs pg_cron and Vault, which PGlite lacks
 await db.exec(readFileSync(new URL('../../supabase/migrations/20261114000300_hardening.sql', import.meta.url), 'utf8'));
+// notification settings and profile photos (migration 4)
+await db.exec(readFileSync(new URL('../../supabase/migrations/20261115000100_settings_avatars.sql', import.meta.url), 'utf8'));
 
 // ---------------------------------------------------------------- helpers
 const su = async (sql, params = []) => { await db.exec('reset role'); return db.query(sql, params); };
@@ -476,6 +490,63 @@ test('claim_pushes hands each notification out once, with locale, actor and toke
   eq(mine.tokens.join(','), 'ExponentPushToken[push-a]', 'tokens');
   eq((await su(`select count(*)::int c from claim_pushes(50)`)).rows[0].c, 0, 'nothing twice');
   await expectErr(() => as(a, `select * from claim_pushes(10)`), 'permission denied');
+});
+
+test('notification settings: private to each player, all on until changed', async () => {
+  const a = await signup('Settings A');
+  const b = await signup('Settings B');
+  eq((await as(a, `select * from notification_settings`)).rows.length, 0, 'no row yet');
+  await as(a, `insert into notification_settings (player_id, matches) values ($1, false)`, [a.id]);
+  await as(a, `update notification_settings set reminders = false where player_id = $1`, [a.id]);
+  const row = (await as(a, `select * from notification_settings`)).rows[0];
+  eq(row.matches, false, 'matches off'); eq(row.reminders, false, 'reminders off'); eq(row.results, true, 'results still on');
+  eq((await as(b, `select * from notification_settings`)).rows.length, 0, 'B cannot read A');
+  await expectErr(() => as(b, `insert into notification_settings (player_id) values ($1)`, [a.id]), 'row-level security');
+  eq((await as(b, `update notification_settings set results = false where player_id = $1 returning 1`, [a.id])).rows.length, 0, 'B cannot change A');
+  await expectErr(() => as(a, `delete from notification_settings where player_id = $1`, [a.id]), 'permission denied');
+});
+
+test('claim_pushes skips the tokens of a kind the player switched off, but still claims it', async () => {
+  await su(`select count(*) from claim_pushes(100000)`);
+  const a = await signup('Quiet host');
+  const b = await signup('Joiner');
+  await as(a, `insert into push_tokens (token, player_id, platform) values ('ExponentPushToken[quiet]', $1, 'ios')`, [a.id]);
+  await as(a, `insert into notification_settings (player_id, matches) values ($1, false)`, [a.id]);
+  const m = await createMatch(a, 'Court 8');
+  await as(b, `select join_match($1)`, [m]);
+  const joined = (await su(`select * from claim_pushes(50)`)).rows.find((r) => r.player_id === a.id && r.type === 'player_joined');
+  assert(joined, 'the notification is claimed');
+  eq(joined.tokens.length, 0, 'no tokens for a switched-off kind');
+  eq((await su(`select count(*)::int c from claim_pushes(50)`)).rows[0].c, 0, 'not retried');
+  eq(await notifs(a, 'player_joined'), 1, 'still in the in-app list');
+  // another kind still reaches the phone
+  await su(`insert into notifications (player_id, type, match_id) values ($1, 'result_confirmed', $2)`, [a.id, m]);
+  const result = (await su(`select * from claim_pushes(50)`)).rows.find((r) => r.player_id === a.id);
+  eq(result.tokens.join(','), 'ExponentPushToken[quiet]', 'results still pushed');
+  eq((await su(`select push_category('tournament_started') t, push_category('result_reminder') r, push_category('result_disputed') d, push_category('join_requested') j`)).rows.map((r) => [r.t, r.r, r.d, r.j].join())[0],
+    'tournaments,reminders,results,matches', 'categories');
+});
+
+test('avatars: own folder only, set_avatar checks the file, no outside URLs', async () => {
+  const a = await signup('Photo A');
+  const b = await signup('Photo B');
+  const bucket = (await su(`select * from storage.buckets where id = 'avatars'`)).rows[0];
+  eq(bucket.public, true, 'public bucket'); eq(bucket.file_size_limit, 524288, '512 KB limit');
+  eq(bucket.allowed_mime_types.join(','), 'image/jpeg,image/png,image/webp', 'images only');
+  const path = `${a.auth}/abc123.jpg`;
+  await as(a, `insert into storage.objects (bucket_id, name) values ('avatars', $1)`, [path]);
+  await expectErr(() => as(b, `insert into storage.objects (bucket_id, name) values ('avatars', $1)`, [`${a.auth}/x.jpg`]), 'row-level security');
+  eq((await as(b, `delete from storage.objects where name = $1 returning 1`, [path])).rows.length, 0, 'B cannot delete A\'s photo');
+  await as(a, `select set_avatar($1)`, [path]);
+  eq((await su(`select avatar_url from profiles where id = $1`, [a.id])).rows[0].avatar_url, path, 'avatar set');
+  await expectErr(() => as(a, `select set_avatar($1)`, [`${a.auth}/missing.jpg`]), 'invalid_avatar');
+  await expectErr(() => as(b, `select set_avatar($1)`, [path]), 'invalid_avatar');
+  await expectErr(() => as(a, `select set_avatar('https://example.com/x.jpg')`), 'invalid_avatar');
+  await expectErr(() => as(a, `update profiles set avatar_url = 'https://example.com/x.jpg' where id = $1`, [a.id]), 'permission denied');
+  await as(a, `update profiles set city = 'Gdańsk' where id = $1`, [a.id]);
+  await as(a, `select set_avatar(null)`);
+  eq((await su(`select avatar_url from profiles where id = $1`, [a.id])).rows[0].avatar_url, null, 'avatar removed');
+  await expectErr(() => as(null, `select set_avatar(null)`, [], 'anon'), 'permission denied');
 });
 
 // ---------------------------------------------------------------- run

@@ -7,8 +7,26 @@ Only what was reproduced is here; guesses are under "To check" in `test-plan.md`
 | --- | --- | --- |
 | S1 | 0 | 0 |
 | S2 | 0 | 1 |
-| S3 | 0 | 2 |
+| S3 | 0 | 3 |
 | S4 | 1 | 0 |
+
+### BUG-005: on the web, Space does not toggle a switch or pick a chip or segment
+
+- Severity: S3 (keyboard users must know to press Enter instead; the ARIA patterns for switch and radio use Space)
+- Flow / case: F04, S14 / S14-E1, F04-H3
+- Screen: S06, S08, S12, S14, S18, S20, every ChipGroup, SegmentedControl and switch row
+- Build: 104fd36 + working tree (2026-11-15)  Browser / device: Edge 157 headless, 390 px
+
+Steps
+1. Open S14 Ajustes with the keyboard only.
+2. Tab to the "Torneos" switch, press Space.
+
+Expected: the switch turns off.
+Actual: nothing happens; Enter works.
+Evidence: react-native-web 0.21's `isValidKeyPress` (`node_modules/react-native-web/dist/modules/usePressEvents/PressResponder.js`, line 66) accepts Space only when the element is a `<button>` or has `role="button"`; switches and radios get Enter only. S14-E1 first failed with `aria-checked` still "true", but that run also pressed Space before the switches had loaded, so the source is the firm evidence.
+Cause: as above.
+Fix: `spaceToPress()` in `src/components/ui/focus.ts`, spread on ChipGroup chips, SegmentedControl segments and switch rows (web only; it also stops the page scrolling). While fixing it, axe found that a switch row on the web also held react-native-web's own unlabeled `<input>` (rules `label` and `nested-interactive`, S14): on the web the row now draws the track itself.
+Status: fixed on 2026-11-15 (`design/refresh`); see the commit that adds S14-E1.
 
 ### BUG-002: on the web, screen readers are not told which chip is selected, and the − and + of every counter have no name
 

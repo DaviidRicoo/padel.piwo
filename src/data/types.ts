@@ -168,6 +168,16 @@ export interface AppNotification {
   createdAt: string;
 }
 
+/** The push switches on S14, one per group of notification types (notification_settings). */
+export type PushCategory = 'matches' | 'results' | 'reminders' | 'tournaments';
+export type NotificationSettings = Record<PushCategory, boolean>;
+
+/** A profile photo ready to upload: a square JPEG, base64 without the data: prefix. */
+export interface AvatarImage {
+  base64: string;
+  mimeType: 'image/jpeg';
+}
+
 export interface ProfileUpdate {
   displayName?: string;
   city?: string | null;

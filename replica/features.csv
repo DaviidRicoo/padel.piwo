@@ -2,7 +2,7 @@ feature,area,priority,original,clone,notes
 Registro con email y contraseña (abierto),onboarding,must,yes,yes,"Probado en real (2026-11-14): registro, correo con código por Gmail (llegó rápido, no fue a spam), confirmación y entrada; perfil creado por el trigger"
 Inicio de sesión y cerrar sesión,onboarding,must,yes,yes,"Probado en real contra Supabase (2026-11-14): entrar, salir y volver a entrar"
 Registro con Google / Apple,onboarding,should,yes,no,Apple obligatorio en iOS si hay login social
-Recuperar contraseña,onboarding,must,yes,partial,Escrito con código por correo; falta probarlo con un buzón real
+Recuperar contraseña,onboarding,must,yes,partial,"Código por correo, reenviar código (2026-11-15), contraseña nueva y entrada; probado en e2e con datos falsos (F01-H2, F01-N2). Falta probarlo con un buzón real contra Supabase"
 Cuestionario inicial para asignar nivel,onboarding,should,yes,no,Versión propia de 5-8 preguntas
 Crear partido (fecha hora duración lugar tipo plazas),matches,must,yes,yes,Probado en real contra Supabase (2026-11-14) (create_match valida en el servidor)
 Partido amistoso o competitivo,matches,must,yes,yes,Probado en real contra Supabase (2026-11-14)
@@ -28,12 +28,12 @@ Ranking entre amigos o seguidos,ranking,could,yes,no,
 Ranking por club,ranking,could,yes,skip,Depende de la red de clubes
 Cálculo de nivel tras partido competitivo,ranking,should,yes,partial,Algoritmo propio tipo Elo; el de Playtomic es propietario. Elo propio en la capa falsa; falta el cuestionario S04
 Ver perfil propio con stats,profile,must,yes,yes,Probado en real contra Supabase (2026-11-14)
-Editar perfil (nombre foto mano posición),profile,must,yes,partial,"Probado en real contra Supabase (2026-11-14): nombre, ciudad, mano y lado. Falta subir foto"
+Editar perfil (nombre foto mano posición),profile,must,yes,partial,"Probado en real contra Supabase (2026-11-14): nombre, ciudad, mano y lado. Foto hecha (2026-11-15): recorte cuadrado, 512 px JPEG, bucket avatars con límite de 512 KB e imágenes; probada en e2e (S12-H1, S12-E1, S12-E2) y en SQL (PGlite). Falta aplicar la migración 20261115000100 al proyecto real y probarla en un móvil"
 Ver perfil de otro jugador,profile,must,yes,yes,Probado en real contra Supabase (2026-11-14)
 Buscar jugadores,social,should,yes,yes,Probado en real contra Supabase (2026-11-14)
 Seguir jugadores,social,could,yes,no,
 Notificaciones push (invitación resultado plaza),notifications,must,yes,partial,Probado en real contra Supabase (2026-11-14): lista en la app y entrega a Expo; falta un móvil con token (build de desarrollo)
-Ajustes (idioma notificaciones borrar cuenta),settings,must,yes,partial,"Probado en real contra Supabase (2026-11-14): idioma, tema, salir y borrar cuenta (delete-user borra el acceso). Faltan ajustes de notificaciones"
+Ajustes (idioma notificaciones borrar cuenta),settings,must,yes,partial,"Probado en real contra Supabase (2026-11-14): idioma, tema, salir y borrar cuenta (delete-user borra el acceso). Ajustes de notificaciones hechos (2026-11-15): un interruptor por tipo (partidos, resultados, recordatorios, torneos), claim_pushes no envía los tipos apagados; probado en e2e (S14-H1, S14-E1) y en SQL (PGlite). Falta aplicar la migración 20261115000100 al proyecto real"
 Interfaz en español e inglés,settings,must,yes,yes,Idiomas confirmados por el usuario. Todas las pantallas hechas en es y en; diccionario tipado
 Evento social tras el partido (cerveza / quedada),matches,could,no,no,Idea propia de la marca Padel & Piwo; no existe en el original
 Crear torneo de 8 16 o 32 jugadores,tournaments,must,no,yes,Probado en real contra Supabase (2026-11-14)

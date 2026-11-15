@@ -43,6 +43,8 @@ export const ERROR_CODES = [
   'invalid_size',
   'too_many_open',
   'invalid_code',
+  'invalid_avatar',
+  'image_too_large',
   'email_not_confirmed',
   'rate_limited',
   'network',

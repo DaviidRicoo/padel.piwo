@@ -29,9 +29,9 @@ How it was checked:
 | S09 Recent matches | 2026-11-13 | partial | backend | — |
 | S10 Ranking | 2026-11-13 | partial | backend; extra stats (losses, streak, sets) | Long names and "100 %" broke the row at 390 px: names now wrap to two lines and the win-rate column is wider. |
 | S11 My profile | 2026-11-13 | partial | backend; Edit profile (S12) is a stub | — |
-| S12 Edit profile | 2026-11-13 | partial | photo upload (backend); backend | A segmented control with four options cut "Sin indicar"; labels may now take two lines. |
+| S12 Edit profile | 2026-11-13, 2026-11-15 | done (real backend needs migration 20261115000100) | try the photo on a phone | A segmented control with four options cut "Sin indicar"; labels may now take two lines. 2026-11-15: profile photo. The web picker has no crop UI, so every photo is centre-cropped and shrunk to 512 px JPEG on the device (expo-image-manipulator), which also drops EXIF and GPS. `avatar_url` now holds a Storage path set only by `set_avatar()`, so nobody can point an avatar at an outside URL. |
 | S13 Another player's profile | 2026-11-13 | partial | backend; follow (could) | Match cards showed "Jugado" from the viewer's side; they now show that player's win or loss. |
-| S14 Settings | 2026-11-13 | partial | notification settings; delete account (backend) | — |
+| S14 Settings | 2026-11-13, 2026-11-15 | done (real backend needs migration 20261115000100) | — | 2026-11-15: one push switch per kind (matches, results, reminders, tournaments) in a private `notification_settings` table. Switched-off kinds are still claimed by `claim_pushes()` (never retried) but get no tokens, and they stay in the in-app list. On the web, Space did not toggle switches or radios (BUG-005). |
 | S15 Notifications | 2026-11-13 | partial | real push (backend + Expo push) | — |
 | S16 Search players | 2026-11-13 | partial | backend | — |
 | S17 Tournaments | 2026-11-13 | partial | backend | Invitations waiting for me sit on top, with accept and decline. |

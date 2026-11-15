@@ -67,7 +67,9 @@ test.describe('F04 enter and confirm a result', () => {
   test('F04-H3 a set the other team won, then fine-tuned with the counters', async ({ page }) => {
     await openApp(page, '/match/m_seed_15');
     await tap(page, 'Introducir resultado');
-    await quick(page, 1, '4-6').click();
+    // keyboard: Space picks a chip (BUG-005)
+    await quick(page, 1, '4-6').focus();
+    await page.keyboard.press('Space');
     await expect(quick(page, 1, '4-6')).toHaveAccessibleName(/^4-6, gana Equipo B/);
     expect(await stepperValue(page, 'Set 1, Equipo A')).toBe(4);
     expect(await stepperValue(page, 'Set 1, Equipo B')).toBe(6);

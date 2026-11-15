@@ -2,12 +2,28 @@
 // /replica-backend swaps in Supabase. State lives in memory: a reload resets it.
 import type { Api } from '../api';
 import { ApiError } from '../errors';
-import { freeSlots, HOST_CONFIRM_AFTER_DAYS, LEVEL_MAX, LEVEL_MIN, livePairOf, ratingDeltas, roundsFor, teamOfPlayer, TOURNAMENT_SIZES, winnerOf } from '../rules';
+import {
+  AVATAR_MAX_BYTES,
+  base64Bytes,
+  DEFAULT_NOTIFICATION_SETTINGS,
+  freeSlots,
+  HOST_CONFIRM_AFTER_DAYS,
+  LEVEL_MAX,
+  LEVEL_MIN,
+  livePairOf,
+  PUSH_CATEGORIES,
+  ratingDeltas,
+  roundsFor,
+  teamOfPlayer,
+  TOURNAMENT_SIZES,
+  winnerOf,
+} from '../rules';
 import {
   teamOf,
   type AppNotification,
   type Id,
   type Match,
+  type NotificationSettings,
   type NotificationType,
   type Profile,
   type RankingEntry,
@@ -38,6 +54,7 @@ export function createFakeApi(opts: FakeApiOptions = {}): Api {
   const matches = new Map<Id, Match>(seed.matches.map((m) => [m.id, m]));
   const tournaments = new Map<Id, Tournament>(seed.tournaments.map((t) => [t.id, t]));
   const notifications = [...seed.notifications];
+  const pushSettings = new Map<Id, NotificationSettings>();
   const listeners = new Set<() => void>();
   let userId: Id | null = null;
   let counter = 0;
@@ -264,7 +281,8 @@ export function createFakeApi(opts: FakeApiOptions = {}): Api {
       async requestPasswordReset(email) {
         await wait();
         if (!EMAIL.test(email.trim())) throw new ApiError('invalid_email');
-        // the real backend emails a link; it never says whether the account exists
+        // the real backend emails a 6-digit code; it never says whether the account exists.
+        // Here any 6 digits work for an existing account (resetPassword).
       },
       currentUserId: () => userId,
     },
@@ -295,6 +313,34 @@ export function createFakeApi(opts: FakeApiOptions = {}): Api {
       if (update.locale !== undefined) prof.locale = update.locale;
       emit();
       return clone(prof);
+    },
+
+    async setAvatar(image) {
+      await wait();
+      const prof = profiles.get(me())!;
+      if (image) {
+        if (image.mimeType !== 'image/jpeg' || !/^[A-Za-z0-9+/=]+$/.test(image.base64)) throw new ApiError('invalid_avatar');
+        if (base64Bytes(image.base64) > AVATAR_MAX_BYTES) throw new ApiError('image_too_large');
+      }
+      // the real layer stores a Storage path; here the image itself is the URL
+      prof.avatarUrl = image ? `data:${image.mimeType};base64,${image.base64}` : null;
+      emit();
+      return clone(prof);
+    },
+
+    async getNotificationSettings() {
+      await wait();
+      return { ...(pushSettings.get(me()) ?? DEFAULT_NOTIFICATION_SETTINGS) };
+    },
+
+    async updateNotificationSettings(patch) {
+      await wait();
+      const uid = me();
+      const next = { ...(pushSettings.get(uid) ?? DEFAULT_NOTIFICATION_SETTINGS) };
+      for (const k of PUSH_CATEGORIES) if (typeof patch[k] === 'boolean') next[k] = patch[k];
+      pushSettings.set(uid, next);
+      emit();
+      return { ...next };
     },
 
     async searchPlayers(query) {

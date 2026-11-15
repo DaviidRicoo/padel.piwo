@@ -1,5 +1,5 @@
 // F01 Sign up: S01 -> S02 -> (S04 not built yet) -> S05, plus sign in (S03).
-import { expect, field, openApp, seeText, signOut, tab, tap, test } from './fixtures';
+import { expect, field, openApp, SEED_PASSWORD, seeText, signOut, tab, tap, test } from './fixtures';
 
 test.describe('F01 sign up and sign in', () => {
   test.beforeEach(async ({ page }) => {
@@ -75,6 +75,30 @@ test.describe('F01 sign up and sign in', () => {
     await seeText(page, 'El correo o la contraseña no son correctos.');
     await expect(field(page, 'Correo')).toHaveValue('ana@padelpiwo.test');
     await field(page, 'Contraseña').fill('padel1234');
+    await field(page, 'Contraseña').press('Enter');
+    await seeText(page, 'Partidos abiertos');
+  });
+
+  test('F01-H2 password recovery: code, new password, signed in; the old password stops working', async ({ page }) => {
+    await tap(page, 'Ya tengo cuenta');
+    await tap(page, '¿Has olvidado la contraseña?');
+    await field(page, 'Correo').fill('ana@padelpiwo.test');
+    await tap(page, 'Enviar código');
+    await seeText(page, /Si hay una cuenta con ana@padelpiwo.test/);
+    await tap(page, 'Reenviar código');
+    await seeText(page, 'Te hemos enviado un código nuevo');
+    await field(page, 'Código').fill('482913');
+    await field(page, 'Contraseña nueva').fill('nueva-clave-9');
+    await tap(page, 'Guardar contraseña');
+    await seeText(page, 'Contraseña cambiada');
+    await seeText(page, 'Partidos abiertos');
+    await signOut(page);
+    await tap(page, 'Ya tengo cuenta');
+    await field(page, 'Correo').fill('ana@padelpiwo.test');
+    await field(page, 'Contraseña').fill(SEED_PASSWORD);
+    await field(page, 'Contraseña').press('Enter');
+    await seeText(page, 'El correo o la contraseña no son correctos.');
+    await field(page, 'Contraseña').fill('nueva-clave-9');
     await field(page, 'Contraseña').press('Enter');
     await seeText(page, 'Partidos abiertos');
   });

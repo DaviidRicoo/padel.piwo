@@ -21,7 +21,7 @@ export default function Notifications() {
   const q = useQuery('notifications-screen', async () => {
     const items = await api.listNotifications();
     const actors = [...new Set(items.map((n) => n.actorId).filter((x): x is string => !!x))];
-    const people = Object.fromEntries((await api.getProfiles(actors)).map((p) => [p.id, p.displayName]));
+    const people = Object.fromEntries((await api.getProfiles(actors)).map((p) => [p.id, p]));
     return { items, people };
   });
 
@@ -47,7 +47,7 @@ export default function Notifications() {
           <View style={{ paddingHorizontal: t.layout.gutter }}>
             <Group inset={t.space[4] + 40 + t.space[3]}>
               {q.data.items.map((n) => (
-                <Item key={n.id} n={n} actor={n.actorId ? q.data!.people[n.actorId] : undefined} />
+                <Item key={n.id} n={n} actor={n.actorId ? q.data!.people[n.actorId]?.displayName : undefined} actorPhoto={n.actorId ? q.data!.people[n.actorId]?.avatarUrl : null} />
               ))}
             </Group>
           </View>
@@ -57,7 +57,7 @@ export default function Notifications() {
   );
 }
 
-function Item({ n, actor }: { n: AppNotification; actor?: string }) {
+function Item({ n, actor, actorPhoto }: { n: AppNotification; actor?: string; actorPhoto?: string | null }) {
   const t = useTheme();
   const i18n = useI18n();
   const focus = useFocusRing();
@@ -84,7 +84,7 @@ function Item({ n, actor }: { n: AppNotification; actor?: string }) {
         focus.ring,
       ]}>
       {actor ? (
-        <Avatar name={actor} size={40} />
+        <Avatar name={actor} uri={actorPhoto} size={40} />
       ) : (
         // the same 40 px column as an avatar, so every line of text starts in one place
         <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: t.color.goldSoft }}>

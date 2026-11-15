@@ -3,6 +3,10 @@
 Date: 2026-11-15. Build: `e8d67b4` (branch `design/refresh`).
 Sources: `replica/features.csv` (scored with `parity.py`), the Playwright suite (`replica/test-plan.md`), the recon map's flows (`replica/recon.md`).
 
+## Update 2026-11-15
+
+Faster score entry, notification settings, the profile photo and "resend code" for password recovery are built and tested (e2e 109 of 110 with BUG-003 skipped, SQL 25 of 25). The three musts stay `partial` in `features.csv` until they are checked against the real Supabase project, so the score below is unchanged.
+
 ## Verdict: not shippable yet
 
 - 4 of the 24 scored must-haves are partial (none is missing outright).
@@ -83,8 +87,8 @@ Other differences:
 
 1. **Push on a real phone**: a development build with EAS, register the token, receive "someone joined" and the end-of-match reminder. Closes 2 musts and the tournament notifications.
 2. ~~**Faster score entry**~~ (behaviour fix for F04 and F09): done 2026-11-15. Each set has chips for 6-0 … 7-6 and 0-6 … 6-7; 6-3 6-2 now takes 5 taps.
-3. **Notification settings** (must): a switch per kind (matches, results, tournaments, reminders), saved on the profile and honoured by `send-push`.
-4. **Profile photo** (must): pick from the gallery, crop to a square, upload to a Storage bucket with a size and type limit, show it in every avatar.
-5. **Password recovery on the real backend** (must): request a code to a real mailbox, set a new password, sign in. Mostly a test; fix whatever it shows.
+3. **Notification settings** (must): built 2026-11-15. Four switches on S14 in a private `notification_settings` table; `claim_pushes()` sends nothing for a switched-off kind. Tested in e2e and SQL. Left: apply migration `20261115000100` to the real project.
+4. **Profile photo** (must): built 2026-11-15. Pick, square crop, 512 px JPEG, public `avatars` bucket (512 KB, images only, own folder only), set through `set_avatar()`, shown in every avatar; `delete-user` removes it. Tested in e2e and SQL. Left: apply the migration, deploy `delete-user`, try it on a phone.
+5. **Password recovery on the real backend** (must): "Reenviar código" added and the whole flow tested on fake data (F01-H2). Left: you try it with your own mailbox against the real project.
 
 After those five, every scored must-have is done and the verdict becomes "shippable". Then `/replica-entrepreneur` if you want to go beyond Playtomic, or straight to `/replica-deploy` to hand it to the residence.

@@ -18,6 +18,20 @@ export default function ForgotPassword() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<{ field: 'email' | 'code' | 'password'; text: string } | undefined>();
   const [busy, setBusy] = useState(false);
+  const [resending, setResending] = useState(false);
+
+  // a second code, if the first never arrived (Supabase allows one a minute: rate_limited)
+  async function resend() {
+    setResending(true);
+    try {
+      await api.auth.requestPasswordReset(email);
+      toast(t('verify.resent'), 'success');
+    } catch (e) {
+      toast(t(`errors.${toApiError(e).code}`), 'error');
+    } finally {
+      setResending(false);
+    }
+  }
 
   async function send() {
     setBusy(true);
@@ -74,6 +88,7 @@ export default function ForgotPassword() {
           onSubmitEditing={save}
         />
         <Button label={t('forgot.save')} size="lg" fullWidth loading={busy} onPress={save} />
+        <Button label={t('verify.resend')} variant="ghost" fullWidth loading={resending} disabled={busy} onPress={resend} />
         <AppText variant="caption" tone="textMuted" align="center">
           {t('verify.spam')}
         </AppText>

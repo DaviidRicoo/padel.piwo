@@ -1,10 +1,12 @@
 import type {
   AppNotification,
+  AvatarImage,
   Id,
   Locale,
   Match,
   NewMatch,
   NewTournament,
+  NotificationSettings,
   Profile,
   ProfileUpdate,
   RankingEntry,
@@ -44,6 +46,12 @@ export interface Api {
   getProfile(id: Id): Promise<Profile>;
   getProfiles(ids: Id[]): Promise<Profile[]>;
   updateProfile(update: ProfileUpdate): Promise<Profile>;
+  /** uploads a new photo (replacing the old one), or removes it with null; set_avatar() */
+  setAvatar(image: AvatarImage | null): Promise<Profile>;
+
+  /** the signed-in player's push switches (S14); all on until changed */
+  getNotificationSettings(): Promise<NotificationSettings>;
+  updateNotificationSettings(patch: Partial<NotificationSettings>): Promise<NotificationSettings>;
   searchPlayers(query: string): Promise<Profile[]>;
 
   /** open, upcoming, non-tournament matches, soonest first */

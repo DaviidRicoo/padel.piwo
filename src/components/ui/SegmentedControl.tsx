@@ -3,7 +3,7 @@ import { Pressable, View } from 'react-native';
 import { useTheme } from '@/theme';
 
 import { AppText } from './AppText';
-import { useFocusRing } from './focus';
+import { spaceToPress, useFocusRing } from './focus';
 
 export interface SegmentedOption<T extends string> {
   value: T;
@@ -52,6 +52,7 @@ function Segment({ label, selected, disabled, onPress }: { label: string; select
       disabled={disabled}
       onPress={onPress}
       hitSlop={4}
+      {...spaceToPress(onPress, disabled)}
       {...focus.handlers}
       style={({ pressed }) => [
         {

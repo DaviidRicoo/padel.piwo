@@ -3,7 +3,7 @@ import { Pressable, ScrollView, View } from 'react-native';
 import { useTheme } from '@/theme';
 
 import { AppText } from './AppText';
-import { useFocusRing } from './focus';
+import { spaceToPress, useFocusRing } from './focus';
 
 export interface Chip<T extends string> {
   value: T;
@@ -77,6 +77,7 @@ function ChipButton<T extends string>({ chip, selected, onPress, compact }: { ch
       aria-disabled={!!chip.disabled}
       disabled={chip.disabled}
       onPress={onPress}
+      {...spaceToPress(onPress, chip.disabled)}
       {...focus.handlers}
       style={({ pressed }) => [
         {

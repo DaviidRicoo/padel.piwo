@@ -6,6 +6,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { Api } from '../api';
 import { ApiError, toApiError, type ErrorCode } from '../errors';
+import { AVATAR_MAX_BYTES, base64Bytes, DEFAULT_NOTIFICATION_SETTINGS, PUSH_CATEGORIES } from '../rules';
 import type {
   AppNotification,
   Id,
@@ -85,10 +86,29 @@ const MATCH =
 // tournament points at its champion pair), so the embed must name which foreign key to follow
 const TOURNAMENT = '*, tournament_pairs!tournament_pairs_tournament_id_fkey(*), tournament_ties(*)';
 
-const toProfile = (r: ProfileRow): Profile => ({
+/** profiles.avatar_url is a path in the public "avatars" bucket (set_avatar()); the app shows its public URL */
+const avatarUrlOf = (base: string, path: string | null): string | null =>
+  !path ? null : /^https?:/.test(path) ? path : `${base}/storage/v1/object/public/avatars/${path.split('/').map(encodeURIComponent).join('/')}`;
+
+/** base64 to bytes for Storage uploads (atob exists on the web and in Hermes) */
+function decodeBase64(b64: string): Uint8Array {
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+interface SettingsRow {
+  matches: boolean;
+  results: boolean;
+  reminders: boolean;
+  tournaments: boolean;
+}
+
+const toProfile = (r: ProfileRow, base: string): Profile => ({
   id: r.id,
   displayName: r.display_name,
-  avatarUrl: r.avatar_url,
+  avatarUrl: avatarUrlOf(base, r.avatar_url),
   city: r.city,
   hand: r.hand,
   courtSide: r.court_side,
@@ -189,6 +209,8 @@ export function createSupabaseApi(url: string, publishableKey: string): Api {
   let ready = false;
 
   const emit = () => listeners.forEach((l) => l());
+  const base = url.replace(/\/+$/, '');
+  const profileOf = (r: ProfileRow) => toProfile(r, base);
 
   /** the signed-in login's player id (profiles.id is not the auth user id) */
   async function loadProfileId(authId: string | undefined) {
@@ -309,13 +331,61 @@ export function createSupabaseApi(url: string, publishableKey: string): Api {
     async getProfile(id) {
       const row = check(await sb.from('profiles').select(PROFILE).eq('id', id).maybeSingle());
       if (!row) throw new ApiError('not_allowed');
-      return toProfile(row as ProfileRow);
+      return profileOf(row as ProfileRow);
     },
 
     async getProfiles(ids) {
       if (!ids.length) return [];
       const rows = check(await sb.from('profiles').select(PROFILE).in('id', ids));
-      return (rows as ProfileRow[]).map(toProfile);
+      return (rows as ProfileRow[]).map(profileOf);
+    },
+
+    async setAvatar(image) {
+      const playerId = me();
+      const { data: session } = await sb.auth.getSession();
+      const authId = session.session?.user.id;
+      if (!authId) throw new ApiError('not_authenticated');
+      const bucket = sb.storage.from('avatars');
+      // what is in my folder now; removed once the profile points at the new file
+      const { data: before } = await bucket.list(authId);
+      let path: string | null = null;
+      if (image) {
+        if (base64Bytes(image.base64) > AVATAR_MAX_BYTES) throw new ApiError('image_too_large');
+        // a new name each time, so phones never show a cached old photo
+        path = `${authId}/${Date.now().toString(36)}.jpg`;
+        const { error } = await bucket.upload(path, decodeBase64(image.base64), { contentType: image.mimeType, cacheControl: '31536000', upsert: false });
+        if (error) {
+          const status = String((error as { statusCode?: string | number }).statusCode ?? '');
+          if (status === '413' || /maximum allowed size/i.test(error.message)) throw new ApiError('image_too_large');
+          if (/mime type/i.test(error.message)) throw new ApiError('invalid_avatar');
+          fail(error);
+        }
+      }
+      check(await sb.rpc('set_avatar', { p_path: path }));
+      const stale = (before ?? []).map((f) => `${authId}/${f.name}`).filter((p) => p !== path);
+      if (stale.length) await bucket.remove(stale);
+      emit();
+      return api.getProfile(playerId);
+    },
+
+    async getNotificationSettings() {
+      const row = check(await sb.from('notification_settings').select('matches, results, reminders, tournaments').eq('player_id', me()).maybeSingle());
+      return { ...DEFAULT_NOTIFICATION_SETTINGS, ...((row as SettingsRow | null) ?? {}) };
+    },
+
+    async updateNotificationSettings(patch) {
+      const current = await api.getNotificationSettings();
+      const next = { ...current };
+      for (const k of PUSH_CATEGORIES) if (typeof patch[k] === 'boolean') next[k] = patch[k];
+      const row = check(
+        await sb
+          .from('notification_settings')
+          .upsert({ player_id: me(), ...next }, { onConflict: 'player_id' })
+          .select('matches, results, reminders, tournaments')
+          .single(),
+      );
+      emit();
+      return { ...DEFAULT_NOTIFICATION_SETTINGS, ...(row as SettingsRow) };
     },
 
     async updateProfile(update) {
@@ -331,14 +401,14 @@ export function createSupabaseApi(url: string, publishableKey: string): Api {
       if (update.locale !== undefined) patch.locale = update.locale;
       const row = check(await sb.from('profiles').update(patch).eq('id', me()).select(PROFILE).single());
       emit();
-      return toProfile(row as ProfileRow);
+      return profileOf(row as ProfileRow);
     },
 
     async searchPlayers(query) {
       const q = clean(query);
       let req = sb.from('profiles').select(PROFILE).eq('is_deleted', false).neq('id', me()).order('display_name').limit(50);
       if (q) req = req.ilike('display_name', `%${q}%`);
-      return (check(await req) as ProfileRow[]).map(toProfile);
+      return (check(await req) as ProfileRow[]).map(profileOf);
     },
 
     async listOpenMatches() {
@@ -400,7 +470,7 @@ export function createSupabaseApi(url: string, publishableKey: string): Api {
         (r): RankingEntry => ({
           playerId: r.player_id,
           displayName: r.display_name,
-          avatarUrl: r.avatar_url,
+          avatarUrl: avatarUrlOf(base, r.avatar_url),
           level: Number(r.level),
           played: Number(r.played),
           won: Number(r.won),

@@ -1,9 +1,41 @@
 // Pure rules shared by the fake data layer and the screens. Each one mirrors a
 // rule in supabase/migrations/20261114000100_schema.sql, so the app and the database agree.
 import { ApiError } from './errors';
-import { teamOf, type Id, type Match, type SetScore, type Team, type Tournament, type TournamentPair } from './types';
+import {
+  teamOf,
+  type Id,
+  type Match,
+  type NotificationSettings,
+  type NotificationType,
+  type PushCategory,
+  type SetScore,
+  type Team,
+  type Tournament,
+  type TournamentPair,
+} from './types';
 
 export const TOURNAMENT_SIZES = [8, 16, 32] as const;
+
+export const PUSH_CATEGORIES: PushCategory[] = ['matches', 'results', 'reminders', 'tournaments'];
+/** no notification_settings row: everything on */
+export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = { matches: true, results: true, reminders: true, tournaments: true };
+
+/** push_category(): which S14 switch a notification type belongs to. */
+export function pushCategoryOf(type: NotificationType): PushCategory {
+  if (type.startsWith('tournament_')) return 'tournaments';
+  if (type === 'result_reminder') return 'reminders';
+  if (type.startsWith('result_')) return 'results';
+  return 'matches';
+}
+
+/** the bucket's file_size_limit (512 KB), checked before uploading */
+export const AVATAR_MAX_BYTES = 512 * 1024;
+
+/** decoded size of a base64 string, without decoding it */
+export function base64Bytes(b64: string): number {
+  const pad = b64.endsWith('==') ? 2 : b64.endsWith('=') ? 1 : 0;
+  return Math.floor((b64.length * 3) / 4) - pad;
+}
 
 /** 4 pairs play 2 rounds, 8 pairs 3, 16 pairs 4. */
 export function roundsFor(maxPairs: number): number {

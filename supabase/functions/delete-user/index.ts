@@ -1,7 +1,8 @@
 // delete-user: called by the app (S14, "Borrar cuenta") with the player's session.
 // 1. delete_account(), as the player: anonymises the profile, frees future
 //    matches, hands over tournaments they organise (see the schema migration).
-// 2. Deletes the login itself with the admin API, so the email and password are
+// 2. Removes the profile photo from the "avatars" bucket.
+// 3. Deletes the login itself with the admin API, so the email and password are
 //    gone. profiles.auth_id is set to null by its "on delete set null" rule.
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
@@ -26,6 +27,15 @@ Deno.serve(async (req) => {
   if (rpcError) return json({ error: rpcError.message }, 400);
 
   const admin = createClient(SUPABASE_URL, secretKey(), { auth: { persistSession: false } });
+
+  // the profile photo goes too (delete_account() already cleared avatar_url)
+  const folder = userData.user.id;
+  const { data: files } = await admin.storage.from('avatars').list(folder);
+  if (files?.length) {
+    const { error: removeError } = await admin.storage.from('avatars').remove(files.map((f) => `${folder}/${f.name}`));
+    if (removeError) console.error('avatar not removed', removeError.message);
+  }
+
   const { error: deleteError } = await admin.auth.admin.deleteUser(userData.user.id);
   if (deleteError) return json({ error: deleteError.message }, 500);
 

@@ -6,8 +6,8 @@ Env: local web build (`npx expo start --web --port 8082`) on the in-memory fake 
 How to run everything:
 
 ```bash
-npm run test:e2e                                  # 103 Playwright cases (starts the server if needed)
-PGLITE_ENTRY=<pglite>/dist/index.js node replica/tests/schema.test.mjs   # 22 database rule tests
+npm run test:e2e                                  # 110 Playwright cases (starts the server if needed)
+PGLITE_ENTRY=<pglite>/dist/index.js node replica/tests/schema.test.mjs   # 25 database rule tests
 node replica/tests/core-loop.mjs http://localhost:8082 shots   # older click-throughs, still kept
 node replica/tests/batch2-flow.mjs http://localhost:8082 shots
 ```
@@ -20,8 +20,8 @@ Every Playwright case fails on any console error, page error or 5xx response (`e
 
 | suite | cases | passed | failed | skipped |
 | --- | --- | --- | --- | --- |
-| Playwright `e2e/` | 103 | 102 | 0 | 1 (BUG-003, known, `test.fixme`) |
-| database rules (PGlite) | 22 | 22 | 0 | 0 |
+| Playwright `e2e/` | 110 | 109 | 0 | 1 (BUG-003, known, `test.fixme`) |
+| database rules (PGlite) | 25 | 25 | 0 | 0 |
 | older click-throughs (core loop, batch 2) | 17 steps | 17 | 0 | 0 |
 | manual (below) | 9 | not run in this pass | | |
 
@@ -36,6 +36,7 @@ Every Playwright case fails on any console error, page error or 5xx response (`e
 | F01-E4 | edge: double click | double tap Crear cuenta | one account, no "email in use" error | e2e/f01-signup | pass |
 | F01-E5 | edge: back mid-flow | type a name, browser back | welcome screen | e2e/f01-signup | pass |
 | F01-N1 | negative: wrong password | wrong password, then the right one with Enter | error, email kept, then signed in | e2e/f01-signup | pass |
+| F01-H2 | happy: password recovery | Enviar código, Reenviar código, any 6 digits, new password; sign out; old password, then the new one | "Te hemos enviado un código nuevo", "Contraseña cambiada", signed in; old password refused, new one works | e2e/f01-signup | pass |
 | F01-N2 | negative: bad code | password recovery with "12ab" | "El código no es correcto o ha caducado." | e2e/f01-signup | pass |
 | F01-M1 | manual: real email | sign up on the real backend, code arrives, not in spam | account active, lands on Partidos | manual | passed earlier (user, 2026-11-14) |
 
@@ -99,7 +100,14 @@ Every Playwright case fails on any console error, page error or 5xx response (`e
 | F06-E3 | edge: back without saving | type, back | old name kept | e2e/f05-f06 | pass |
 | S16-H1 | accents and case | search "LUCIA" then "zzz" | finds Lucía; empty state | e2e/f05-f06 | pass |
 | S13-N1 | deleted record | /player/p_nadie | "No encontramos a este jugador." | e2e/f05-f06 | pass |
-| F06-M1 | manual: photo | upload a large photo | not built yet (`should`), see features.csv | manual | not run |
+| S12-H1 | happy: photo | choose a 900 × 600 PNG; Diego opens Ana's profile | "Foto guardada"; the avatar is a 512 × 512 JPEG; Diego sees it | e2e/s12-s14 | pass |
+| S12-E1 | edge: small photo, remove | a 120 × 160 PNG, then Quitar foto | 120 × 120, not enlarged; initials back, "Elegir foto" | e2e/s12-s14 | pass |
+| S12-E2 | edge: back out of the picker | open the picker, choose nothing | nothing changes | e2e/s12-s14 | pass |
+| S12-DB | permission, size, type | another login's folder; a missing file; an outside URL; avatar_url written directly | refused (RLS, `invalid_avatar`, permission denied); bucket public, 512 KB, jpeg/png/webp only | db | pass |
+| F06-M1 | manual: photo on a phone | dev build, pick a photo, crop it | square crop UI, saved, shown on S11 and in Ranking | manual | not run (needs the real backend migration and a dev build) |
+| S14-H1 | happy: push switches | all on; Recordatorios off; leave and come back; Diego's settings | stays off for Ana only | e2e/s12-s14 | pass |
+| S14-E1 | keyboard | Space on a switch, Enter back, Space on "Oscuro" | toggles, picks the segment | e2e/s12-s14 | pass (after BUG-005) |
+| S14-DB | push filter | Ana switches Partidos off; Diego joins; a result is confirmed | the join is claimed with no tokens and stays in Avisos; the result is pushed; another player cannot read or write Ana's settings | db | pass |
 
 ## F07 to F09 Tournaments (S17 to S21)
 
@@ -146,7 +154,7 @@ Run on a phone or on the real backend. None was run in this pass; the first two 
 6. Expired session: revoke the session in Supabase (or sign out everywhere from another device); the next action sends the user to sign in.
 7. Two tabs or two phones at once: join the last slot on both at the same moment (real Postgres row lock).
 8. VoiceOver (iOS) and TalkBack (Android): the steppers are adjustable (swipe up and down), the chips announce "selected".
-9. Profile photo upload: not built yet.
+9. Profile photo on a phone (dev build, real backend): pick, crop, see it on S11, S10 and in a match.
 
 ## To check (not reproduced, so not in bugs.md)
 
