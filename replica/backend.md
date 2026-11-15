@@ -41,7 +41,6 @@ Fecha: 2026-11-14. Rama: `build/backend`.
 | Correos | `supabase/templates/*.html` | Confirmación, recuperación y aviso de contraseña cambiada, en español e inglés, con código de 6 cifras. |
 | Cliente | `src/data/supabase/` | Sesión cifrada en el móvil (clave AES en el llavero seguro) y traducción de errores de Supabase a los códigos de la app. |
 | Datos de prueba | `scripts/seed-supabase.ts` | Los mismos 12 residentes, partidos y torneos que la capa falsa. Solo para un proyecto de pruebas. |
-| Variables | `.env.example` | Todas las variables, sin valores. |
 
 **Decisiones:**
 - **Códigos de 6 cifras en lugar de enlaces** en los correos: funcionan igual en Expo Go, en web y en la app instalada, sin enlaces profundos.

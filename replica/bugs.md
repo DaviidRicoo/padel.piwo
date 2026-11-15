@@ -7,8 +7,24 @@ Only what was reproduced is here; guesses are under "To check" in `test-plan.md`
 | --- | --- | --- |
 | S1 | 0 | 0 |
 | S2 | 0 | 1 |
-| S3 | 0 | 3 |
+| S3 | 0 | 4 |
 | S4 | 1 | 0 |
+
+### BUG-006: password recovery signs the player in even when the new password is not saved
+
+- Severity: S3 (the player lands in the app with the old password and an error about the code; typing the current password as the "new" one gave "unknown")
+- Flow / case: F01 / F01-N2
+- Screen: forgot password
+- Build: 36a343a (code review, real Supabase layer only; the fake layer cannot show it)
+
+Steps
+1. Forgot password, enter the emailed code and, as the new password, the current one.
+
+Expected: the player is signed in (the password they typed works).
+Actual: `verifyOtp` signs the login in, `onAuthStateChange` opens the app, then `updateUser` fails with `same_password` and the screen shows an unknown error. Any other failure of `updateUser` (network) left the player signed in with the old password.
+Cause: `resetPassword()` in `src/data/supabase/supabaseApi.ts` let the auth listener react to the recovery session before the password was saved.
+Fix: the listener is held back while `resetPassword()` runs; `same_password` counts as success; any other failure signs the recovery session out and shows the error.
+Status: fixed on 2026-11-15 (`design/refresh`), not yet tried with a real mailbox.
 
 ### BUG-005: on the web, Space does not toggle a switch or pick a chip or segment
 

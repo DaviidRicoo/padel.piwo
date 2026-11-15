@@ -6,7 +6,8 @@ import { createFakeApi } from './fake/fakeApi';
 import { createSupabaseApi } from './supabase/supabaseApi';
 import type { Id } from './types';
 
-// Supabase when its URL and publishable key are set (.env.local, see .env.example);
+// Supabase when its URL and publishable key are set (EXPO_PUBLIC_SUPABASE_URL and
+// EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY in .env.local);
 // otherwise the in-memory fake layer, where EXPO_PUBLIC_DEMO_USER starts signed in
 // as a seed account (used for screenshots).
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;

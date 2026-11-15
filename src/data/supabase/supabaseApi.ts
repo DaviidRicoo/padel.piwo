@@ -207,6 +207,8 @@ export function createSupabaseApi(url: string, publishableKey: string): Api {
   const listeners = new Set<() => void>();
   let profileId: Id | null = null;
   let ready = false;
+  /** true while resetPassword() runs: see there */
+  let resetting = false;
 
   const emit = () => listeners.forEach((l) => l());
   const base = url.replace(/\/+$/, '');
@@ -229,7 +231,7 @@ export function createSupabaseApi(url: string, publishableKey: string): Api {
     emit();
   });
   sb.auth.onAuthStateChange((event, session) => {
-    if (event === 'INITIAL_SESSION') return;
+    if (event === 'INITIAL_SESSION' || resetting) return;
     // never await inside this callback (Supabase docs); load the profile id after it returns
     setTimeout(async () => {
       await loadProfileId(session?.user.id);
@@ -302,11 +304,23 @@ export function createSupabaseApi(url: string, publishableKey: string): Api {
         if (error) fail(error);
       },
       async resetPassword(email, code, newPassword) {
-        const verified = await sb.auth.verifyOtp({ email: email.trim(), token: code.trim(), type: 'recovery' });
-        if (verified.error) fail(verified.error);
-        const { error } = await sb.auth.updateUser({ password: newPassword });
-        if (error) fail(error);
-        await loadProfileId(verified.data.user?.id);
+        // The code signs the login in before the new password is saved. Hold the app's
+        // signed-in state back until it is, so a failed save does not drop the player
+        // into the app with the old password (onAuthStateChange skips while this is set).
+        resetting = true;
+        try {
+          const verified = await sb.auth.verifyOtp({ email: email.trim(), token: code.trim(), type: 'recovery' });
+          if (verified.error) fail(verified.error);
+          const { error } = await sb.auth.updateUser({ password: newPassword });
+          // "same_password": the player typed their current password, which is now known to work
+          if (error && (error as { code?: string }).code !== 'same_password') {
+            await sb.auth.signOut({ scope: 'local' });
+            fail(error);
+          }
+          await loadProfileId(verified.data.user?.id);
+        } finally {
+          resetting = false;
+        }
         emit();
       },
       currentUserId: () => profileId,

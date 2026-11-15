@@ -87,8 +87,8 @@ Other differences:
 
 1. **Push on a real phone**: a development build with EAS, register the token, receive "someone joined" and the end-of-match reminder. Closes 2 musts and the tournament notifications.
 2. ~~**Faster score entry**~~ (behaviour fix for F04 and F09): done 2026-11-15. Each set has chips for 6-0 … 7-6 and 0-6 … 6-7; 6-3 6-2 now takes 5 taps.
-3. **Notification settings** (must): built 2026-11-15. Four switches on S14 in a private `notification_settings` table; `claim_pushes()` sends nothing for a switched-off kind. Tested in e2e and SQL. Left: apply migration `20261115000100` to the real project.
-4. **Profile photo** (must): built 2026-11-15. Pick, square crop, 512 px JPEG, public `avatars` bucket (512 KB, images only, own folder only), set through `set_avatar()`, shown in every avatar; `delete-user` removes it. Tested in e2e and SQL. Left: apply the migration, deploy `delete-user`, try it on a phone.
+3. **Notification settings** (must): built 2026-11-15. Four switches on S14 in a private `notification_settings` table; `claim_pushes()` sends nothing for a switched-off kind. Tested in e2e and SQL. Migration `20261115000100` is applied to the real project (checked 2026-11-15).
+4. **Profile photo** (must): built 2026-11-15. Pick, square crop, 512 px JPEG, public `avatars` bucket (512 KB, images only, own folder only), set through `set_avatar()`, shown in every avatar; `delete-user` removes it. Tested in e2e and SQL. Migration applied and `delete-user` deployed (v3, checked 2026-11-15). Left: try it on a phone and on the real project.
 5. **Password recovery on the real backend** (must): "Reenviar código" added and the whole flow tested on fake data (F01-H2). Left: you try it with your own mailbox against the real project.
 
 After those five, every scored must-have is done and the verdict becomes "shippable". Then `/replica-entrepreneur` if you want to go beyond Playtomic, or straight to `/replica-deploy` to hand it to the residence.

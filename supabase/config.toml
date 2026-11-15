@@ -242,7 +242,7 @@ otp_length = 6
 otp_expiry = 3600
 
 # Auth emails go out through the owner's Gmail account (an app password, never the
-# real password). Values come from supabase/.env, which is not committed; see .env.example.
+# real password). Values come from supabase/.env, which is not committed.
 [auth.email.smtp]
 enabled = true
 host = "smtp.gmail.com"
